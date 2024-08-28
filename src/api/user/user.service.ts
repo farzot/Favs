@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { BaseService } from "src/infrastructure/lib/baseService";
-import { UserEntity } from "src/core/entity";
+import { ExecuterEntity } from "src/core/entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import {  UserRepository } from "src/core/repository";
 import { JwtToken } from "src/infrastructure/lib/jwt-token";
@@ -14,9 +14,9 @@ import { ChangePasswordDto } from "./dto/change-password.dto";
 import { PasswordNotMatch, UsernameOrPasswordIncorrect } from "../auth/exception";
 
 @Injectable()
-export class UserService extends BaseService<CreateUserDto, UpdateUserDto, UserEntity> {
+export class UserService extends BaseService<CreateUserDto, UpdateUserDto, ExecuterEntity> {
 	constructor(
-		@InjectRepository(UserEntity) private readonly userRepo: UserRepository,
+		@InjectRepository(ExecuterEntity) private readonly userRepo: UserRepository,
 		private readonly jwtToken: JwtToken,
 	) {
 		super(userRepo, "user");
@@ -33,7 +33,7 @@ export class UserService extends BaseService<CreateUserDto, UpdateUserDto, UserE
 
 	// 	const user = this.userRepo.create(dto);
 
-	// 	const new_user: UserEntity = await this.userRepo.save({ ...user });
+	// 	const new_user: ExecuterEntity = await this.userRepo.save({ ...user });
 	// 	const token = await this.jwtToken.generateToken(new_user);
 
 	// 	const hashed_token = await BcryptEncryption.encrypt(token.refresh_token);
@@ -50,7 +50,7 @@ export class UserService extends BaseService<CreateUserDto, UpdateUserDto, UserE
 	public async updateUserSelfInfo(
 		dto: UpdateUserDto,
 		lang: string,
-		user: UserEntity,
+		user: ExecuterEntity,
 	): Promise<IResponse<[]>> {
 		user.first_name = dto.first_name || user.first_name;
 		user.last_name = dto.last_name || user.last_name;
@@ -62,7 +62,7 @@ export class UserService extends BaseService<CreateUserDto, UpdateUserDto, UserE
 	}
 
 	/** update user password */
-	public async changePassword(dto: ChangePasswordDto, user: UserEntity,lang:string) {
+	public async changePassword(dto: ChangePasswordDto, user: ExecuterEntity,lang:string) {
 		if (dto.new_password !== dto.confirm_password) {
 			throw new PasswordNotMatch();
 		}

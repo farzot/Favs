@@ -1,0 +1,42 @@
+# name: CI and Deploy to Server
+
+# on:
+#   push:
+#     branches:
+#       - master
+
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: Checkout repository
+#       uses: actions/checkout@v3
+
+#     - name: Set up Node.js
+#       uses: actions/setup-node@v3
+#       with:
+#         node-version: '20.10.0'
+
+#     - name: Install dependencies
+#       run: npm install
+
+#     - name: Build project
+#       run: npm run build
+      
+#     - name: Execute remote commands via SSH
+#       uses: appleboy/ssh-action@v1.0.3
+#       with:
+#         host: ${{ secrets.SERVER_IP }}
+#         username: root
+#         key: ${{ secrets.SSH_PRIVATE_KEY }}
+#         script: |
+#           mkdir -p /root/mebel-house
+#           cd /root/mebel-house
+#           git init
+#           git pull https://github.com/farzot/Mebel-house.git
+#           npm install
+#           npm run build
+#           echo "${{ secrets.ENV_FILE }}" > /root/mebel-house/.env
+#           pm2 reload Mebel-house || pm2 start dist/main.js --name "Mebel-house"
+#           pm2 save

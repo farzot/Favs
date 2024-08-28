@@ -5,6 +5,7 @@ import {
 	Get,
 	Param,
 	ParseIntPipe,
+	ParseUUIDPipe,
 	Patch,
 	Post,
 	Query,
@@ -23,16 +24,22 @@ import { JwtAuthGuard } from "../auth/user/AuthGuard";
 import { SmallCategoryService } from "./small_category.service";
 import { UpdateSmallCategoryDto } from "./dto/update-category.dto";
 import { CreateSmallCategoryDto } from "./dto/create-category.dto";
+import { CurrentExecuter } from "../../common/decorator/current-user";
+import { ICurrentExecuter } from "../../common/interface/current-executer.interface";
 
-@Controller("category")
+@Controller("/admin/small-category")
 export class SmallCategoryController {
 	constructor(private readonly categoryService: SmallCategoryService) {}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
 	@Post()
-	async createCategory(@Body() dto: CreateSmallCategoryDto, @CurrentLanguage() lang: string) {
-		return this.categoryService.createCategory(dto, lang);
+	async createCategory(
+		@Body() dto: CreateSmallCategoryDto,
+		@CurrentLanguage() lang: string,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
+	) {
+		return this.categoryService.createCategory(dto, lang, executerPayload.executer);
 	}
 
 	@Get()
@@ -41,7 +48,7 @@ export class SmallCategoryController {
 	}
 
 	@Get(":id")
-	async getCategoryByID(@Param("id") id: string, @CurrentLanguage() lang: string) {
+	async getCategoryByID(@Param("id", ParseUUIDPipe) id: string, @CurrentLanguage() lang: string) {
 		return this.categoryService.getCategoryByID(id, lang);
 	}
 
@@ -49,17 +56,22 @@ export class SmallCategoryController {
 	@RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
 	@Patch(":id")
 	async updateCategory(
-		@Param("id") id: string,
+		@Param("id", ParseUUIDPipe) id: string,
 		@Body() dto: UpdateSmallCategoryDto,
 		@CurrentLanguage() lang: string = "ru",
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
-		return this.categoryService.updateCategory(id, dto, lang);
+		return this.categoryService.updateCategory(id, dto, lang, executerPayload.executer);
 	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
 	@Delete(":id")
-	async deleteCategory(@Param("id") id: string, @CurrentLanguage() lang: string) {
-		return this.categoryService.deleteCategory(id, lang);
+	async deleteCategory(
+		@Param("id", ParseUUIDPipe) id: string,
+		@CurrentLanguage() lang: string,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
+	) {
+		return this.categoryService.deleteCategory(id, lang, executerPayload.executer);
 	}
 }

@@ -1,6 +1,5 @@
 import { Entity, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../common/database/BaseEntity';
-import { UserEntity } from './user.entity';
 
 @Entity("followers")
 export class FollowersEntity extends BaseEntity {

@@ -1,24 +1,18 @@
 import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany } from "typeorm";
 import { BaseEntity } from "../../common/database/BaseEntity";
-import { UserEntity } from "./user.entity";
 import { MessageEntity } from "./message.entity";
+import { ExecuterEntity } from "./executer.entity";
 @Entity("chats")
 export class ChatEntity extends BaseEntity {
-	@Column({ type: "boolean", default: false })
-	public is_group!: boolean;
+	// @Column({ type: "boolean", default: false })
+	// public is_group!: boolean;
 
-	// @ManyToOne(() => UserEntity, (user) => user.messages)
-	// public sender!: UserEntity;
+	// @Column({ type: "timestamp", nullable: true })
+	// read_at!: Date;
 
-	// @ManyToOne(() => UserEntity, (user) => user.received_messages)
-	// recipient!: UserEntity;
-
-	@Column({ type: "timestamp", nullable: true })
-	read_at!: Date;
-
-	@ManyToMany(() => UserEntity, (user) => user.chats)
+	@ManyToMany(() => ExecuterEntity, (user) => user.chats)
 	@JoinTable()
-	public participants!: UserEntity[];
+	public participants!: ExecuterEntity[];
 
 	@OneToMany(() => MessageEntity, (message) => message.chat)
 	public messages!: MessageEntity[];

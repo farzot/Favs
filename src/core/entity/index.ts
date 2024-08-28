@@ -1,9 +1,7 @@
 export { BannerEntity } from "./banner.entity";
 export { ProductEntity } from "./product.entity";
-export { UserEntity } from "./user.entity";
 export { BasketEntity } from "./basket.entity";
 export { UserLocationEntity } from "./user-location.entity";
-export { AdminEntity } from "./admin.entity";
 export { OrderEntity } from "./order.entity";
 export { OrderItemEntity } from "./order-item.entity";
 export { FeedbackEntity } from "./feedback.entity";
@@ -23,3 +21,4 @@ export { BusinessReviewEntity } from "./business_review.entity";
 export { ProductReviewEntity } from "./product_review.entity";
 export { ChatEntity } from "./chat.entity";
 export { SmallCategoryEntity } from "./small-category.entity";
+export { ExecuterEntity } from "./executer.entity";

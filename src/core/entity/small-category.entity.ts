@@ -2,6 +2,8 @@ import { BaseEntity } from "src/common/database/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { ProductEntity } from "./product.entity";
 import { BigCategoryEntity } from "./big-category.entity";
+import { BusinessEntity } from "./business.entity";
+import { ExecuterEntity } from "./executer.entity";
 
 @Entity("small_categories")
 export class SmallCategoryEntity extends BaseEntity {
@@ -23,10 +25,31 @@ export class SmallCategoryEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public description_ru!: string;
 
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "created_by" })
+	created_by!: ExecuterEntity;
+
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "updated_by" })
+	updated_by!: ExecuterEntity;
+
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "deleted_by" })
+	deleted_by!: ExecuterEntity;
+
 	@OneToMany(() => ProductEntity, (product) => product.category)
 	public products!: ProductEntity[];
 
+	@OneToMany(() => BusinessEntity, (business) => business.category)
+	public business!: BusinessEntity[];
+
 	@ManyToOne(() => BigCategoryEntity, (category) => category.small_categories)
 	@JoinColumn({ name: "big_category_id" })
-	public category!: BigCategoryEntity;
+	public big_category!: BigCategoryEntity;
 }

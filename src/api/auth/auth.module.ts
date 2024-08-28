@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { AdminEntity, UserEntity } from "src/core/entity";
+import {  ExecuterEntity } from "src/core/entity";
 import { JwtToken } from "src/infrastructure/lib/jwt-token";
 import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "./user/AuthStrategy";
@@ -14,7 +14,7 @@ import { MailModule } from "../mail/mail.module";
 
 @Module({
 	imports: [
-		TypeOrmModule.forFeature([UserEntity, AdminEntity]),
+		TypeOrmModule.forFeature([ExecuterEntity]),
 		JwtModule,
 		UserModule,
 		AdminModule,

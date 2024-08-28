@@ -1,6 +1,6 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { BaseEntity } from '../../common/database/BaseEntity';
-import { UserEntity } from './user.entity';
+import { Entity, Column, ManyToOne, JoinColumn } from "typeorm";
+import { BaseEntity } from "../../common/database/BaseEntity";
+import { ExecuterEntity } from "./executer.entity";
 @Entity("notifications")
 export class NotificationEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
@@ -9,7 +9,7 @@ export class NotificationEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public message!: string;
 
-	@ManyToOne(() => UserEntity, (user) => user.notifications)
+	@ManyToOne(() => ExecuterEntity, (user) => user.notifications)
 	@JoinColumn({ name: "user_id" })
-	public user!: UserEntity;
+	public user!: ExecuterEntity;
 }

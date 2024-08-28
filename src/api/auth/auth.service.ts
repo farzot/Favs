@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { CreateAuthDto } from "./dto/create-auth.dto";
 import { UpdateAuthDto } from "./dto/update-auth.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { UserEntity } from "src/core/entity";
+import { ExecuterEntity } from "src/core/entity";
 import { UserRepository } from "src/core/repository";
 import { BaseService } from "src/infrastructure/lib/baseService";
 import {
@@ -26,14 +26,13 @@ import { IResponse } from "src/common/type";
 import { MailService } from "../mail/mail.service";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { config } from "../../config";
-import { log } from "console";
 import * as otpGenerator from "otp-generator";
 import { ActivateUserDto } from "./dto/activate-user.dto";
 
 @Injectable()
-export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, UserEntity> {
+export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, ExecuterEntity> {
 	constructor(
-		@InjectRepository(UserEntity) private readonly userRepo: UserRepository,
+		@InjectRepository(ExecuterEntity) private readonly userRepo: UserRepository,
 		private readonly jwtService: JwtService,
 		private readonly jwtToken: JwtToken,
 		private readonly mailService: MailService,
@@ -41,63 +40,60 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, UserE
 		super(userRepo, "User");
 	}
 
-	// public async validateUserGoogle(
-	// 	google_id: string,
-	// 	email: string,
-	// 	firstName: string,
-	// 	lastName: string,
-	// 	password: string,
-	// 	accessToken: string,
-	// 	lang: string,
-	// ): Promise<IResponse<unknown>> {
-	// 	let user = await this.getRepository.findOne({ where: { email: email } });
-	// 	let refresh_token, access_token, message, data;
-	// 	if (!user) {
-	// 		user = this.getRepository.create({
-	// 			google_id,
-	// 			email,
-	// 			first_name: firstName,
-	// 			last_name: lastName,
-	// 			password: password,
-	// 			google_access_token: accessToken,
-	// 		});
-	// 		refresh_token = await this.jwtToken.generateToken(
-	// 			user,
-	// 			config.REFRESH_EXPIRE_TIME,
-	// 			config.REFRESH_SECRET_KEY,
-	// 		);
-	// 		access_token = await this.jwtToken.generateToken(
-	// 			user,
-	// 			config.ACCESS_EXPIRE_TIME,
-	// 			config.ACCESS_SECRET_KEY,
-	// 		);
-	// 		const hashed_token = await BcryptEncryption.encrypt(refresh_token);
-	// 		user.hashed_token = hashed_token;
-	// 		await this.getRepository.save(user);
-	// 		data = { ...user, access_token, refresh_token };
-	// 		message = responseByLang("create", lang);
-	// 	} else {
-	// 		refresh_token = await this.jwtToken.generateToken(
-	// 			user,
-	// 			config.REFRESH_EXPIRE_TIME,
-	// 			config.REFRESH_SECRET_KEY,
-	// 		);
-	// 		access_token = await this.jwtToken.generateToken(
-	// 			user,
-	// 			config.ACCESS_EXPIRE_TIME,
-	// 			config.ACCESS_SECRET_KEY,
-	// 		);
-	// 		const hashed_token = await BcryptEncryption.encrypt(refresh_token);
-	// 		user.hashed_token = hashed_token;
-	// 		user.google_access_token = accessToken;
-	// 		user.google_id = google_id;
-	// 		await this.getRepository.save(user);
-	// 		data = { accessToken, refresh_token };
-	// 		message = responseByLang("login", lang);
-	// 	}
+	public async validateUserGoogle(
+		google_id: string,
+		email: string,
+		firstName: string,
+		lastName: string,
+		password: string,
+		lang: string,
+	): Promise<IResponse<unknown>> {
+		let user = await this.getRepository.findOne({ where: { email: email } });
+		let refresh_token, access_token, message, data;
+		if (!user) {
+			user = this.getRepository.create({
+				google_id,
+				email,
+				first_name: firstName,
+				last_name: lastName,
+				password: password,
+			});
+			refresh_token = await this.jwtToken.generateToken(
+				user,
+				config.REFRESH_EXPIRE_TIME,
+				config.REFRESH_SECRET_KEY,
+			);
+			access_token = await this.jwtToken.generateToken(
+				user,
+				config.ACCESS_EXPIRE_TIME,
+				config.ACCESS_SECRET_KEY,
+			);
+			const hashed_token = await BcryptEncryption.encrypt(refresh_token);
+			user.hashed_token = hashed_token;
+			await this.getRepository.save(user);
+			data = { ...user, access_token, refresh_token };
+			message = responseByLang("create", lang);
+		} else {
+			refresh_token = await this.jwtToken.generateToken(
+				user,
+				config.REFRESH_EXPIRE_TIME,
+				config.REFRESH_SECRET_KEY,
+			);
+			access_token = await this.jwtToken.generateToken(
+				user,
+				config.ACCESS_EXPIRE_TIME,
+				config.ACCESS_SECRET_KEY,
+			);
+			const hashed_token = await BcryptEncryption.encrypt(refresh_token);
+			user.hashed_token = hashed_token;
+			user.google_id = google_id;
+			await this.getRepository.save(user);
+			data = { access_token, refresh_token };
+			message = responseByLang("login", lang);
+		}
 
-	// 	return { status_code: 201, data, message };
-	// }
+		return { status_code: 201, data, message };
+	}
 
 	public async refreshToken(token: string, lang: string) {
 		let data;
@@ -128,63 +124,11 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, UserE
 		return { status_code: 200, data: { access_token, refresh_token }, message: "success" };
 	}
 
-	// public async register(createAuthDto: CreateAuthDto, lang: string): Promise<IResponse<unknown>> {
-	// 	console.log("register started:", new Date());
-
-	// 	// Fetch only necessary fields
-	// 	const found_user = await this.userRepo.findOne({
-	// 		where: { email: createAuthDto.email, is_deleted: false },
-	// 		select: {
-	// 			id: true,
-	// 			email: true,
-	// 			otp: true,
-	// 			otp_expiration: true,
-	// 			is_active: true,
-	// 		},
-	// 	});
-	// 	console.log(found_user);
-
-	// 	let user;
-	// 	const otp = generateOtp();
-	// 	const otp_expiration = new Date();
-	// 	otp_expiration.setMinutes(otp_expiration.getMinutes() + 3);
-
-	// 	if (found_user) {
-	// 		if (found_user.is_active) {
-	// 			throw new UserAlreadyExists();
-	// 		}
-	// 		// Update OTP and expiration in a single save call
-	// 		found_user.otp = otp;
-	// 		found_user.otp_expiration = otp_expiration;
-	// 		user = found_user;
-	// 	} else {
-	// 		const hashed_password = await BcryptEncryption.encrypt(createAuthDto.password);
-	// 		user = this.userRepo.create({
-	// 			...createAuthDto,
-	// 			password: hashed_password,
-	// 			is_active: false,
-	// 			otp,
-	// 			otp_expiration,
-	// 		});
-	// 	}
-
-	// 	// Save the user and send the OTP concurrently
-	// 	await Promise.all([
-	// 		this.userRepo.save(user),
-	// 		this.mailService.sendOTP(createAuthDto.email, otp),
-	// 	]);
-
-	// 	console.log("register finished:", new Date());
-	// 	const message = responseByLang("create", lang);
-	// 	return {
-	// 		status_code: 201,
-	// 		data: { id: user.id, email: user.email },
-	// 		message,
-	// 	};
-	// }
 	public async register(createAuthDto: CreateAuthDto, lang: string): Promise<IResponse<unknown>> {
 		console.log("register started:", new Date());
-
+		if (createAuthDto.password !== createAuthDto.password) {
+			throw new PasswordNotMatch();
+		}
 		const current_date = new Date();
 		const ten_minutes_ago = new Date(current_date.getTime() - 10 * 60000);
 		const otp = generateOtp();
@@ -295,7 +239,7 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, UserE
 		return { status_code: 201, data: { ...user.data, access_token, refresh_token }, message };
 	}
 
-	public async login(loginDto: LoginDto, lang: string): Promise<IResponse<UserEntity | any>> {
+	public async login(loginDto: LoginDto, lang: string): Promise<IResponse<ExecuterEntity | any>> {
 		const user = await this.getRepository.findOne({
 			where: { email: loginDto.email, is_deleted: false },
 		});
@@ -323,10 +267,10 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, UserE
 		return { status_code: 200, data: { access_token, refresh_token }, message };
 	}
 
-	public async logout(user: UserEntity, lang: string): Promise<IResponse<unknown>> {
+	public async logout(user: ExecuterEntity, lang: string): Promise<IResponse<unknown>> {
 		user.hashed_token = ""; // Hashed tokenni null ga o'rnatish
 		await this.userRepo.save(user);
-		const message = responseByLang("logout", lang); 
+		const message = responseByLang("logout", lang);
 		return {
 			status_code: 200,
 			data: {},
@@ -363,7 +307,7 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, UserE
 
 	public async resetPassword(
 		resetPasswordDto: ResetPasswordDto,
-		user: UserEntity,
+		user: ExecuterEntity,
 		lang: string,
 	): Promise<IResponse<unknown>> {
 		const { new_password, confirm_password } = resetPasswordDto;

@@ -2,31 +2,30 @@ import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { log } from "console";
 import { config } from "src/config";
-import { AdminEntity, UserEntity } from "src/core/entity";
+import { ExecuterEntity } from "src/core/entity";
 
 @Injectable()
 export class JwtToken {
 	constructor(private readonly jwt: JwtService) {}
 
 	public async generateToken(
-		user: UserEntity,
+		user: ExecuterEntity,
 		expire_time: string,
-		seret_key: string,
+		secret_key: string,
 	): Promise<string> {
 		const payload = {
 			id: user.id,
 			role: user.role,
 			email: user.email,
 		};
-
-		
-		return this.jwt.sign(payload, {
-			secret: seret_key,
+		console.log(`payload: `, payload);
+		return this.jwt.signAsync(payload, {
+			secret: secret_key,
 			expiresIn: expire_time,
 		});
 	}
 
-	public async generateAdminToken(admin: AdminEntity) {
+	public async generateAdminToken(admin: ExecuterEntity) {
 		const payload = {
 			id: admin.id,
 			role: admin.role,
@@ -50,7 +49,7 @@ export class JwtToken {
 	}
 
 	// public async generateToken(
-	// 	user: UserEntity,
+	// 	user: ExecuterEntity,
 	// 	time: string
 	// ): Promise<{ access_token: string; refresh_token: string }> {
 	// 	const payload = {

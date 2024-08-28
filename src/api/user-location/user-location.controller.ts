@@ -10,14 +10,14 @@ import {
 } from "@nestjs/common";
 import { Roles } from "src/common/database/Enums";
 import { CurrentLanguage } from "src/common/decorator/current-language";
-import { CurrentUser } from "src/common/decorator/current-user";
-import { UserEntity } from "src/core/entity";
+import { ExecuterEntity } from "src/core/entity";
 import { RolesGuard } from "../auth/roles/RoleGuard";
 import { RolesDecorator } from "../auth/roles/RolesDecorator";
 import { JwtAuthGuard } from "../auth/user/AuthGuard";
 import { CreateUserLocationDto } from "./dto/create-user-location.dto";
 import { UpdateUserLocationDto } from "./dto/update-user-location.dto";
 import { UserLocationService } from "./user-location.service";
+import { CurrentExecuter } from "../../common/decorator/current-user";
 
 @Controller("user-location")
 export class UserLocationController {
@@ -29,7 +29,7 @@ export class UserLocationController {
 	public async create(
 		@Body() dto: CreateUserLocationDto,
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 	) {
 		return this.userLocationService.createUserLocation(dto, lang, user);
 	}
@@ -42,7 +42,7 @@ export class UserLocationController {
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.USER)
 	@Get("self")
-	public findSelfLocation(@CurrentLanguage() lang: string, @CurrentUser() user: UserEntity) {
+	public findSelfLocation(@CurrentLanguage() lang: string, @CurrentExecuter() user: ExecuterEntity) {
 		return this.userLocationService.findAll(lang, {
 			where: { user, is_deleted: false },
 			order: { id: "DESC" },
@@ -55,7 +55,7 @@ export class UserLocationController {
 	public findOneSelfLocation(
 		@Param("id") id: string,
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 	) {
 		return this.userLocationService.findOneById(id, lang, {
 			where: { user, is_deleted: false },
@@ -69,7 +69,7 @@ export class UserLocationController {
 		@Param("id") id: string,
 		@Body() dto: UpdateUserLocationDto,
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 	) {
 		return this.userLocationService.updateUserLocation(id, dto, lang, user);
 	}
@@ -80,7 +80,7 @@ export class UserLocationController {
 	public async removeSelfLocation(
 		@Param("id") id: string,
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 	) {
 		await this.userLocationService.findOneById(id, lang, { where: { user } });
 		return this.userLocationService.delete(id, lang);

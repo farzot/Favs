@@ -1,4 +1,4 @@
 import { Repository } from "typeorm";
-import { UserEntity } from "../entity";
+import { ExecuterEntity } from "../entity";
 
-export type UserRepository = Repository<UserEntity>;
+export type UserRepository = Repository<ExecuterEntity>;

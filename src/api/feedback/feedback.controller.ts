@@ -19,10 +19,10 @@ import { JwtAuthGuard } from "../auth/user/AuthGuard";
 import { RolesGuard } from "../auth/roles/RoleGuard";
 import { Roles } from "../../common/database/Enums";
 import { RolesDecorator } from "../auth/roles/RolesDecorator";
-import { UserEntity } from "../../core/entity";
-import { CurrentUser } from "../../common/decorator/current-user";
+import { ExecuterEntity } from "../../core/entity";
 import { UpdateFeedbackDto } from "./dto/update-feedback.dto";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import { CurrentExecuter } from "../../common/decorator/current-user";
 
 @Controller("feedback")
 export class FeedbackController {
@@ -36,7 +36,7 @@ export class FeedbackController {
 		@Body() createFeedbackDto: CreateFeedbackDto,
 		@UploadedFiles()
 		files: { images: Express.Multer.File[] },
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 		@CurrentLanguage() lang: string,
 	) {
 		return this.feedbackService.createFeedback(createFeedbackDto, files, user, lang);
@@ -70,7 +70,7 @@ export class FeedbackController {
 		@Body() dto: UpdateFeedbackDto,
 		@UploadedFiles()
 		files: { images: Express.Multer.File[] },
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 		@CurrentLanguage() lang: string,
 	) {
 		return this.feedbackService.updateFeedback(id, dto, files, user, lang);
@@ -82,7 +82,7 @@ export class FeedbackController {
 	async deleteFeedback(
 		@Param("id") id: string,
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 	) {
 		return this.feedbackService.deleteFeedback(id, user, lang);
 	}

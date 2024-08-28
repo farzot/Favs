@@ -1,8 +1,8 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { BaseEntity } from '../../common/database/BaseEntity';
-import { ProductEntity } from './product.entity';
-import { UserEntity } from './user.entity';
-@Entity("product_entity")
+import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
+import { BaseEntity } from "../../common/database/BaseEntity";
+import { ProductEntity } from "./product.entity";
+import { ExecuterEntity } from "./executer.entity";
+@Entity("product_review")
 export class ProductReviewEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public review_text!: string;
@@ -14,7 +14,7 @@ export class ProductReviewEntity extends BaseEntity {
 	@JoinColumn({ name: "product_id" })
 	public product!: ProductEntity;
 
-	@ManyToOne(() => UserEntity, (user) => user.product_reviews, { onDelete: "CASCADE" })
+	@ManyToOne(() => ExecuterEntity, (user) => user.product_reviews, { onDelete: "CASCADE" })
 	@JoinColumn({ name: "user_id" })
-	public user!: UserEntity;
+	public user!: ExecuterEntity;
 }

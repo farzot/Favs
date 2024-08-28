@@ -6,9 +6,7 @@ import {
 	IsOptional,
 	IsPhoneNumber,
 	IsString,
-	ValidateIf,
 } from "class-validator";
-import { UserEntity } from "src/core/entity";
 
 export class CreateUserLocationDto {
 

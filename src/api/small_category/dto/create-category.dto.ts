@@ -24,4 +24,8 @@ export class CreateSmallCategoryDto {
 	@IsNotEmpty()
 	@IsString()
 	public description_ru!: string;
+
+	@IsNotEmpty()
+	@IsString()
+	public big_category!: string;
 }

@@ -1,9 +1,11 @@
-import { Entity, Column, OneToMany } from 'typeorm';
-import { BaseEntity } from '../../common/database/BaseEntity';
-import { BusinessReviewEntity } from './business_review.entity';
-import { ReservationEntity } from './reservation.entity';
-import { CollectionsEntity } from './collections.entity';
-import { BusinessPhotosEntity } from './business-photos.entity';
+import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
+import { BaseEntity } from "../../common/database/BaseEntity";
+import { BusinessReviewEntity } from "./business_review.entity";
+import { ReservationEntity } from "./reservation.entity";
+import { CollectionsEntity } from "./collections.entity";
+import { BusinessPhotosEntity } from "./business-photos.entity";
+import { SmallCategoryEntity } from "./small-category.entity";
+import { ExecuterEntity } from "./executer.entity";
 @Entity("business")
 export class BusinessEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
@@ -45,8 +47,20 @@ export class BusinessEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public owner_id!: string;
 
-	@Column({ type: "varchar", nullable: true })
-	public category_id!: string;
+	@ManyToOne(() => ExecuterEntity, (owner) => owner.business, { onDelete: "CASCADE" })
+	@JoinColumn({ name: "owner_id" })
+	public owner!: ExecuterEntity;
+
+	@ManyToOne(() => SmallCategoryEntity, (category) => category.business, { onDelete: "CASCADE" })
+	@JoinColumn({ name: "category_id" })
+	public category!: SmallCategoryEntity;
+
+	@Column({ type: "boolean", nullable: true, default: false })
+	public is_claimed!: boolean;
+
+	// @ManyToOne(() => BusinessEntity, (business) => business.reviews, { onDelete: "CASCADE" })
+	// @JoinColumn({ name: "business_id" })
+	// public business!: BusinessEntity;
 
 	@OneToMany(() => BusinessReviewEntity, (review) => review.business)
 	public reviews!: BusinessReviewEntity[];

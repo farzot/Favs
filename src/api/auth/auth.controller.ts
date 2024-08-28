@@ -20,43 +20,41 @@ import { RolesGuard } from "./roles/RoleGuard";
 import { JwtAuthGuard } from "./user/AuthGuard";
 import { RolesDecorator } from "./roles/RolesDecorator";
 import { Roles } from "../../common/database/Enums";
-import { UserEntity } from "../../core/entity";
-import { CurrentUser } from "../../common/decorator/current-user";
-import { log } from "console";
+import { ExecuterEntity } from "../../core/entity";
 import { ActivateUserDto } from "./dto/activate-user.dto";
+import { CurrentExecuter } from "../../common/decorator/current-user";
 
 @Controller("auth")
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
-	// @Get("o")
-	// @UseGuards(AuthGuard("google"))
-	// async googleAuth(@Req() req: any): Promise<any> {
-	// 	// console.log('gooogle_zaproz');
-	// }
+	@Get("o")
+	@UseGuards(AuthGuard("google"))
+	async googleAuth(@Req() req: any): Promise<any> {
+		// console.log('gooogle_zaproz');
+	}
 
-	// @Get("google/callback")
-	// @UseGuards(AuthGuard("google"))
-	// public async googleAuthRedirect(
-	// 	@Req() req: any,
-	// 	@Res() res: any,
-	// 	@CurrentLanguage() lang: string,
-	// ) {
-	// 	const user = req.user;
-	// 	const validatedUser = await this.authService.validateUserGoogle(
-	// 		user.googleId,
-	// 		user.email,
-	// 		user.firstName,
-	// 		user.lastName,
-	// 		user.password,
-	// 		user.accessToken,
-	// 		lang,
-	// 	);
-	// 	// res.redirect(`https://iticket.uz/success?user=${encodeURIComponent(JSON.stringify(user))}`);
+	@Get("google/callback")
+	@UseGuards(AuthGuard("google"))
+	public async googleAuthRedirect(
+		@Req() req: any,
+		@Res() res: any,
+		@CurrentLanguage() lang: string,
+	) {
+		const user = req.user;
+		const validatedUser = await this.authService.validateUserGoogle(
+			user.googleId,
+			user.email,
+			user.firstName,
+			user.lastName,
+			user.password,
+			lang,
+		);
+		// res.redirect(`https://iticket.uz/success?user=${encodeURIComponent(JSON.stringify(user))}`);
 
-	// 	// res.redirect(`https://iticket.uz`);
-	// 	return res.json(validatedUser).end();
-	// }
+		// res.redirect(`https://iticket.uz`);
+		return res.json(validatedUser).end();
+	}
 
 	@Post("register")
 	@HttpCode(HttpStatus.CREATED)
@@ -80,7 +78,7 @@ export class AuthController {
 	@RolesDecorator(Roles.USER)
 	@Post("logout")
 	@HttpCode(HttpStatus.OK)
-	public async logout(@CurrentUser() user: UserEntity, @CurrentLanguage() lang: string) {
+	public async logout(@CurrentExecuter() user: ExecuterEntity, @CurrentLanguage() lang: string) {
 		return this.authService.logout(user, lang);
 	}
 
@@ -100,7 +98,7 @@ export class AuthController {
 	public async resetPassword(
 		@Body() resetPasswordDto: ResetPasswordDto,
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 	) {
 		return this.authService.resetPassword(resetPasswordDto, user, lang);
 	}

@@ -12,8 +12,12 @@ export class CreateAuthDto {
 	@IsNotEmpty()
 	@IsEmail()
 	email!: string;
-	
+
 	@IsNotEmpty()
 	@IsString()
 	password!: string;
+
+	@IsNotEmpty()
+	@IsString()
+	confirm_password!: string;
 }
