@@ -37,7 +37,7 @@ export class AdminController {
 		return this.adminService.createAdmin(dto, lang, executerPayload.executer);
 	}
 
-	@Post("create-super-admin")
+	@Post("/create-super-admin")
 	public createSuperAdmin(
 		@Body() dto: CreateAdminDto,
 		@CurrentLanguage() lang: string,

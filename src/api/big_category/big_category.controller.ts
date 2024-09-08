@@ -26,7 +26,7 @@ import { responseByLang } from "../../infrastructure/lib/prompts/successResponse
 import { FilterDto } from "../../common/dto/filter.dto";
 import { IResponse } from "../../common/type";
 
-@Controller("/admin/big-category")
+@Controller("/big-category")
 export class BigCategoryController {
 	constructor(private readonly bigCategoryService: BigCategoryService) {}
 
@@ -41,32 +41,36 @@ export class BigCategoryController {
 		return await this.bigCategoryService.create(dto, lang, executerPayload.executer);
 	}
 
-	@Get()
+	@Get("all")
 	async findAll(
 		@CurrentLanguage() lang: string,
 		@Query() query: FilterDto,
 	): Promise<IResponse<BigCategoryEntity[]>> {
 		let where_condition: FindOptionsWhereProperty<BigCategoryEntity> = {};
-
-		if (query?.search) {
-			where_condition = { name_uz: ILike(`%${query.search}%`), is_deleted: false };
-		} else if (query?.search) {
-			where_condition = { name_ru: ILike(`%${query.search}%`), is_deleted: false };
-		} else if (query?.search) {
-			where_condition = { name_en: ILike(`%${query.search}%`), is_deleted: false };
-		}
-
-		console.log(`where_condition`, where_condition);
+			if (query?.search) {
+				where_condition = [
+					{
+						name_uz: ILike(`%${query.search}%`),
+						is_deleted: false,
+					},
+					{
+						name_ru: ILike(`%${query.search}%`),
+						is_deleted: false,
+					},
+					{
+						name_en: ILike(`%${query.search}%`),
+						is_deleted: false,
+					},
+				];
+			}
 		let { data: categories } = await this.bigCategoryService.findAllWithPagination(lang, {
 			take: query.page_size,
 			skip: query.page,
-			where: { is_deleted: false, ...where_condition },
+			where: where_condition,
 			relations: {},
 			order: { created_at: "DESC" },
 		});
-		console.log(`categories`, categories);
 		categories = this.bigCategoryService.filterCategoryByLang(categories, lang);
-		console.log(`categories_2`, categories);
 		const message = responseByLang("get_all", lang);
 		return { status_code: 200, data: categories, message };
 	}
@@ -78,6 +82,7 @@ export class BigCategoryController {
 	): Promise<IResponse<BigCategoryEntity>> {
 		let { data: category } = await this.bigCategoryService.findOneById(id, lang, {
 			where: { is_deleted: false },
+			relations: { small_categories: true },
 		});
 		[category] = this.bigCategoryService.filterCategoryByLang([category], lang);
 		const message = responseByLang("get_one", lang);

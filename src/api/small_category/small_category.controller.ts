@@ -26,10 +26,15 @@ import { UpdateSmallCategoryDto } from "./dto/update-category.dto";
 import { CreateSmallCategoryDto } from "./dto/create-category.dto";
 import { CurrentExecuter } from "../../common/decorator/current-user";
 import { ICurrentExecuter } from "../../common/interface/current-executer.interface";
+import { BigCategoryService } from "../big_category/big_category.service";
+import { responseByLang } from "../../infrastructure/lib/prompts/successResponsePrompt";
 
-@Controller("/admin/small-category")
+@Controller("/small-category")
 export class SmallCategoryController {
-	constructor(private readonly categoryService: SmallCategoryService) {}
+	constructor(
+		private readonly categoryService: SmallCategoryService,
+		private readonly bigCategoryService: BigCategoryService,
+	) {}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
@@ -39,19 +44,31 @@ export class SmallCategoryController {
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
-		return this.categoryService.createCategory(dto, lang, executerPayload.executer);
+		await this.bigCategoryService.findOneById(dto.big_category.id, lang, {
+			where: { is_deleted: false },
+		});
+		return this.categoryService.create(dto, lang, executerPayload.executer);
 	}
 
+	/** get all categories with filter */
 	@Get()
 	async getAllCategories(@CurrentLanguage() lang: string, @Query() query: FilterDto) {
 		return this.categoryService.getAllCategories(query, lang);
 	}
 
+	/** get one category by id */
 	@Get(":id")
 	async getCategoryByID(@Param("id", ParseUUIDPipe) id: string, @CurrentLanguage() lang: string) {
-		return this.categoryService.getCategoryByID(id, lang);
+		let { data: category } = await this.categoryService.findOneById(id, lang, {
+			where: { is_deleted: false },
+			// relations: { big_category: true },
+		});
+		[category] = this.categoryService.filterCategoryByLang([category], lang);
+		const message = responseByLang("get_one", lang);
+		return { status_code: 200, data: category, message };
 	}
 
+	//update small-category
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
 	@Patch(":id")
@@ -61,9 +78,13 @@ export class SmallCategoryController {
 		@CurrentLanguage() lang: string = "ru",
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
-		return this.categoryService.updateCategory(id, dto, lang, executerPayload.executer);
+		await this.categoryService.findOneById(id, lang, {
+			where: { is_deleted: false },
+		});
+		return this.categoryService.update(id, dto, lang, executerPayload.executer);
 	}
 
+	//delete small-category
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
 	@Delete(":id")
@@ -72,6 +93,7 @@ export class SmallCategoryController {
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
-		return this.categoryService.deleteCategory(id, lang, executerPayload.executer);
+		await this.categoryService.findOneById(id, lang, { where: { is_deleted: false } });
+		return this.categoryService.delete(id, lang, executerPayload.executer);
 	}
 }

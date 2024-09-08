@@ -3,7 +3,7 @@ import { CreateAuthDto } from "./dto/create-auth.dto";
 import { UpdateAuthDto } from "./dto/update-auth.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ExecuterEntity } from "src/core/entity";
-import { UserRepository } from "src/core/repository";
+import { ExecuterRepository, UserRepository } from "src/core/repository";
 import { BaseService } from "src/infrastructure/lib/baseService";
 import {
 	AuthorizationError,
@@ -28,14 +28,16 @@ import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { config } from "../../config";
 import * as otpGenerator from "otp-generator";
 import { ActivateUserDto } from "./dto/activate-user.dto";
+import { DataSource, QueryRunner } from "typeorm";
 
 @Injectable()
 export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, ExecuterEntity> {
 	constructor(
-		@InjectRepository(ExecuterEntity) private readonly userRepo: UserRepository,
+		@InjectRepository(ExecuterEntity) private readonly userRepo: ExecuterRepository,
 		private readonly jwtService: JwtService,
 		private readonly jwtToken: JwtToken,
 		private readonly mailService: MailService,
+		private readonly dataSource: DataSource,
 	) {
 		super(userRepo, "User");
 	}
@@ -104,10 +106,10 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, Execu
 		}
 		const { data: user } = await this.findOneById(data.id, "en");
 
-		const check = await BcryptEncryption.compare(token, user.hashed_token);
-		if (!check) {
-			throw new InvalidToken();
-		}
+		// const check = await BcryptEncryption.compare(token, user.hashed_token);
+		// if (!check) {
+		// 	throw new InvalidToken();
+		// }
 		const access_token = await this.jwtToken.generateToken(
 			user,
 			config.ACCESS_EXPIRE_TIME,
@@ -126,9 +128,7 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, Execu
 
 	public async register(createAuthDto: CreateAuthDto, lang: string): Promise<IResponse<unknown>> {
 		console.log("register started:", new Date());
-		if (createAuthDto.password !== createAuthDto.password) {
-			throw new PasswordNotMatch();
-		}
+
 		const current_date = new Date();
 		const ten_minutes_ago = new Date(current_date.getTime() - 10 * 60000);
 		const otp = generateOtp();
@@ -194,7 +194,7 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, Execu
 			this.userRepo.save(user),
 			this.mailService.sendOTP(createAuthDto.email, otp),
 		]);
-
+		console.log("OTP: ",otp)
 		console.log("register finished:", new Date());
 		const message = responseByLang("create", lang);
 		return {

@@ -22,3 +22,4 @@ export { ProductReviewEntity } from "./product_review.entity";
 export { ChatEntity } from "./chat.entity";
 export { SmallCategoryEntity } from "./small-category.entity";
 export { ExecuterEntity } from "./executer.entity";
+export { AddBusinessRequestEntity } from "./add-business-request.entity";

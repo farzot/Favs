@@ -4,11 +4,14 @@ import { BusinessEntity } from "./business.entity";
 import { ExecuterEntity } from "./executer.entity";
 @Entity("business_reviews")
 export class BusinessReviewEntity extends BaseEntity {
-	@Column({ type: "varchar", nullable: true })
+	@Column({ type: "varchar", length: 12 })
 	public text!: string;
 
-	@Column({ type: "int", nullable: true })
+	@Column({ type: "int" })
 	public rating!: number;
+
+	@Column({ type: "simple-array", nullable: true })
+	public images!: string[];
 
 	@ManyToOne(() => BusinessEntity, (business) => business.reviews, { onDelete: "CASCADE" })
 	@JoinColumn({ name: "business_id" })

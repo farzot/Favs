@@ -40,3 +40,9 @@ export enum PhotoType{
 	LOGO = "logo",
     MAIN = "main",
 }
+
+export enum BusinessRequest {
+	WAITING_FOR_APPROVAL = "pending",
+	ACCEPTED = "accepted",
+	REJECTED = "rejected",
+}

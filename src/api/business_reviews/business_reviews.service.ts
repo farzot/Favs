@@ -15,4 +15,5 @@ export class BusinessReviewsService extends BaseService<
 	constructor(@InjectRepository(BusinessReviewEntity) repository: BusinessReviewRepository) {
 		super(repository, "BusinessReview");
 	}
+	
 }

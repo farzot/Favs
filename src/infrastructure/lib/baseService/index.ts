@@ -63,7 +63,7 @@ export class BaseService<CreateDto, UpdateDto, Entity> {
 		if (!data) {
 			const error_data = {
 				message: [
-					`${this.entityName} Not found`,
+					`${this.entityName} not found`,
 					`${this.entityName} не найден`,
 					`${this.entityName} topilmadi`,
 				],
@@ -91,6 +91,8 @@ export class BaseService<CreateDto, UpdateDto, Entity> {
 		lang: string,
 		options?: IFindOptions<Entity>,
 	): Promise<IResponse<Entity>> {
+		console.log("FindOneById")
+		console.log("id",id)
 		const data = (await this.repository.findOne({
 			select: options?.select || {},
 			relations: options?.relations || [],
@@ -99,7 +101,7 @@ export class BaseService<CreateDto, UpdateDto, Entity> {
 		if (!data) {
 			const error_data = {
 				message: [
-					`${this.entityName} Not found`,
+					`${this.entityName} not found`,
 					`${this.entityName} не найден`,
 					`${this.entityName} topilmadi`,
 				],

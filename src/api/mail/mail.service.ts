@@ -10,11 +10,11 @@ export class MailService {
 	async sendMailLink(user: ExecuterEntity, token: string) {
 		const url = `${String(process.env.API_HOST)}:${Number(
 			process.env.PORT,
-		)}/auth/reset-password?token=${token}`;
+		)}/auth/login?token=${token}`;
 		await this.mailerService.sendMail({
 			from: config.MAILDEV_USER,
 			to: user.email,
-			subject: "Reset Password",
+			subject: "Login with email link",
 			template: "./reset",
 			context: {
 				name: user.first_name,

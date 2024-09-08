@@ -341,12 +341,12 @@ ${productDetails}
 				.substring(0, 19)}
         `;
 			try {
-				SendMsgFromBot(
-					config.BOT_TOKEN,
-					config.CHAT_ID,
-					[{ key: "Yangi buyurtma", value: orderMessage }],
-					// "title",
-				);
+				// SendMsgFromBot(
+				// 	config.BOT_TOKEN,
+				// 	config.CHAT_ID,
+				// 	[{ key: "Yangi buyurtma", value: orderMessage }],
+				// 	// "title",
+				// );
 			} catch (error) {
 				console.log("ErRoR", error);
 

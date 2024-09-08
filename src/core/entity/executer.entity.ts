@@ -46,7 +46,7 @@ export class ExecuterEntity extends BaseEntity {
 	public home_town!: string;
 
 	@Column({ type: "varchar", nullable: true })
-	public birth_date!: string;
+	public birth_date!: number;
 
 	@Column({ type: "varchar", nullable: true })
 	public blog_or_website!: string;
@@ -66,6 +66,12 @@ export class ExecuterEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public hashed_token!: string;
 
+	@Column({ type: "int", nullable: true })
+	public google_id!: string;
+
+	@Column({ type: "boolean", nullable: true, default: false })
+	public is_profile_private!: boolean;
+
 	@Column({ type: "varchar", nullable: true })
 	public otp!: string;
 
@@ -80,12 +86,6 @@ export class ExecuterEntity extends BaseEntity {
 
 	@Column({ type: "int", nullable: true, default: 0 })
 	public otp_blocked_duration!: number;
-
-	@Column({ type: "int", nullable: true })
-	public google_id!: string;
-
-	@Column({ type: "boolean", nullable: true, default: false })
-	public is_profile_private!: boolean;
 
 	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
 		onDelete: "CASCADE",

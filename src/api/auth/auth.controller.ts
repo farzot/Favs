@@ -23,12 +23,13 @@ import { Roles } from "../../common/database/Enums";
 import { ExecuterEntity } from "../../core/entity";
 import { ActivateUserDto } from "./dto/activate-user.dto";
 import { CurrentExecuter } from "../../common/decorator/current-user";
+import { ICurrentExecuter } from "../../common/interface/current-executer.interface";
 
-@Controller("auth")
+@Controller("/auth")
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
-	@Get("o")
+	@Get("/o")
 	@UseGuards(AuthGuard("google"))
 	async googleAuth(@Req() req: any): Promise<any> {
 		// console.log('gooogle_zaproz');
@@ -56,50 +57,54 @@ export class AuthController {
 		return res.json(validatedUser).end();
 	}
 
-	@Post("register")
+	@Post("/register")
 	@HttpCode(HttpStatus.CREATED)
 	public async signUp(@Body() signUpDto: CreateAuthDto, @CurrentLanguage() lang: string) {
 		return this.authService.register(signUpDto, lang);
 	}
 
-	@Post("activate")
+	@Post("/activate")
 	@HttpCode(HttpStatus.CREATED)
 	public async activate(@Body() dto: ActivateUserDto, @CurrentLanguage() lang: string) {
 		return this.authService.activate(dto, lang);
 	}
 
-	@Post("login")
+	@Post("/login")
 	@HttpCode(HttpStatus.OK)
 	public async login(@Body() loginDto: LoginDto, @CurrentLanguage() lang: string) {
 		return this.authService.login(loginDto, lang);
 	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@RolesDecorator(Roles.USER)
-	@Post("logout")
+	// @RolesDecorator(Roles.USER)
+	@Post("/logout")
 	@HttpCode(HttpStatus.OK)
-	public async logout(@CurrentExecuter() user: ExecuterEntity, @CurrentLanguage() lang: string) {
-		return this.authService.logout(user, lang);
+	public async logout(
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
+		@CurrentLanguage() lang: string,
+	) {
+		return this.authService.logout(executerPayload.executer, lang);
 	}
 
-	@Post("refresh-token")
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@Post("/refresh-token")
 	@HttpCode(HttpStatus.OK)
 	public async refreshToken(@Body("token") token: string, @CurrentLanguage() lang: string) {
 		return this.authService.refreshToken(token, lang);
 	}
 
-	@Post("forget-password")
+	@Post("/login-with-link")
 	public async forgetPassword(@Body("email") email: string, @CurrentLanguage() lang: string) {
 		return this.authService.forgetPassword(email, lang);
 	}
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@RolesDecorator(Roles.USER)
-	@Post("reset-password")
-	public async resetPassword(
-		@Body() resetPasswordDto: ResetPasswordDto,
-		@CurrentLanguage() lang: string,
-		@CurrentExecuter() user: ExecuterEntity,
-	) {
-		return this.authService.resetPassword(resetPasswordDto, user, lang);
-	}
+	// @UseGuards(JwtAuthGuard, RolesGuard)
+	// // @RolesDecorator(Roles.USER)
+	// @Post("reset-password")
+	// public async resetPassword(
+	// 	@Body() resetPasswordDto: ResetPasswordDto,
+	// 	@CurrentLanguage() lang: string,
+	// 	@CurrentExecuter() user: ExecuterEntity,
+	// ) {
+	// 	return this.authService.resetPassword(resetPasswordDto, user, lang);
+	// }
 }
