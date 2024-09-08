@@ -1,46 +1,3 @@
-# name: CI and Deploy to Server
-
-# on:
-#   push:
-#     branches:
-#       - master
-
-# jobs:
-#   build-and-deploy:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#     - name: Checkout repository
-#       uses: actions/checkout@v3
-
-#     - name: Set up Node.js
-#       uses: actions/setup-node@v3
-#       with:
-#         node-version: '20.10.0'
-
-#     - name: Install dependencies
-#       run: npm install
-
-#     - name: Build project
-#       run: npm run build
-      
-#     - name: Execute remote commands via SSH
-#       uses: appleboy/ssh-action@v1.0.3
-#       with:
-#         host: ${{ secrets.SERVER_IP }}
-#         username: root
-#         key: ${{ secrets.SSH_PRIVATE_KEY }}
-#         script: |
-#           mkdir -p /root/mebel-house
-#           cd /root/mebel-house
-#           git init
-#           git pull https://github.com/farzot/Mebel-house.git
-#           npm install
-#           npm run build
-#           echo "${{ secrets.ENV_FILE }}" > /root/mebel-house/.env
-#           pm2 reload Mebel-house || pm2 start dist/main.js --name "Mebel-house"
-#           pm2 save
-
 name: CI and Deploy to Server
 
 on:
@@ -67,17 +24,27 @@ jobs:
     - name: Build project
       run: npm run build
 
-    - name: Deploy to production server
-      if: github.ref == 'refs/heads/dev'
-      run: |
-        sshpass -p ${{ secrets.SERVER_PASSWORD }} ssh -o StrictHostKeyChecking=no root@${{ secrets.SERVER_IP }} << 'EOF'
+    - name: Copy files via SSH
+      uses: appleboy/scp-action@v0.1.0
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "."
+        target: "/root/projects/favs_dev"
+
+    - name: Execute remote commands via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
           mkdir -p /root/projects/favs_dev
           cd /root/projects/favs_dev
-          git init
-          git pull https://github.com/farzot/Favs.git
-          npm install
-          npm run build
+          npm install --production
           echo "${{ secrets.ENV_FILE_DEV }}" > /root/projects/favs_dev/.env
+          npm run build
           pm2 reload favs_dev || pm2 start dist/main.js --name "favs_dev"
           pm2 save
-        EOF
+
