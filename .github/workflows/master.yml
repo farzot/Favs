@@ -24,15 +24,6 @@ jobs:
     - name: Build project
       run: npm run build
 
-    - name: Copy files via SSH
-      uses: appleboy/scp-action@v0.1.0
-      with:
-        host: ${{ secrets.SERVER_IP }}
-        username: root
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        source: "."
-        target: "/root/projects/favs_dev"
-
     - name: Execute remote commands via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -42,9 +33,10 @@ jobs:
         script: |
           mkdir -p /root/projects/favs_dev
           cd /root/projects/favs_dev
-          npm install --production
+          git init
+          git pull https://github.com/farzot/Favs.git
           echo "${{ secrets.ENV_FILE_DEV }}" > /root/projects/favs_dev/.env
+          npm i
           npm run build
           pm2 reload favs_dev || pm2 start dist/main.js --name "favs_dev"
           pm2 save
-
