@@ -9,8 +9,8 @@ export enum Roles {
 	USER = "user",
 	BUSINESS_OWNER = "business_owner",
 	BUSINESS_MANAGER = "business_manager",
-	BUSINESS_STORE_ADMIN = "business_store_admin",
-	BUSINESS_STORE_MANAGER = "business_store_manager",
+	// BUSINESS_STORE_ADMIN = "business_store_admin",
+	// BUSINESS_STORE_MANAGER = "business_store_manager",
 }
 
 export enum Gender {
@@ -25,6 +25,12 @@ export enum OrderStatus {
 	DELIVERED = "delivered",
 	FINISHED = "finished",
 	CANCELLED = "cancelled",
+}
+
+export enum ConsultationStatus {
+	PENDING = "pending",
+	REJECTED = "rejected",
+	ACCEPTED = "accepted",
 }
 
 export enum ProductType {

@@ -24,6 +24,8 @@ import { ExecuterEntity } from "../../core/entity";
 import { ActivateUserDto } from "./dto/activate-user.dto";
 import { CurrentExecuter } from "../../common/decorator/current-user";
 import { ICurrentExecuter } from "../../common/interface/current-executer.interface";
+import { VerifySMSCodeDto } from "./dto/verify-sms-code.dto";
+import { SendSMSCodeDto } from "./dto/send-sms-code.dto";
 
 @Controller("/auth")
 export class AuthController {
@@ -86,7 +88,7 @@ export class AuthController {
 		return this.authService.logout(executerPayload.executer, lang);
 	}
 
-	@UseGuards(JwtAuthGuard, RolesGuard)
+	// @UseGuards(JwtAuthGuard, RolesGuard)
 	@Post("/refresh-token")
 	@HttpCode(HttpStatus.OK)
 	public async refreshToken(@Body("token") token: string, @CurrentLanguage() lang: string) {
@@ -94,17 +96,19 @@ export class AuthController {
 	}
 
 	@Post("/login-with-link")
-	public async forgetPassword(@Body("email") email: string, @CurrentLanguage() lang: string) {
-		return this.authService.forgetPassword(email, lang);
+	public async loginWithLink(@Body("email") email: string, @CurrentLanguage() lang: string) {
+		return this.authService.loginWithLink(email, lang);
 	}
-	// @UseGuards(JwtAuthGuard, RolesGuard)
-	// // @RolesDecorator(Roles.USER)
-	// @Post("reset-password")
-	// public async resetPassword(
-	// 	@Body() resetPasswordDto: ResetPasswordDto,
-	// 	@CurrentLanguage() lang: string,
-	// 	@CurrentExecuter() user: ExecuterEntity,
-	// ) {
-	// 	return this.authService.resetPassword(resetPasswordDto, user, lang);
-	// }
+
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@Post("/send-sms-code")
+	public async sendSmsCode(@Body() dto: SendSMSCodeDto, @CurrentLanguage() lang: string) {
+		return this.authService.sendSMSCode(dto, lang);
+	}
+
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@Post("/verify-sms-code")
+	public async verfSmsCode(@Body() dto: VerifySMSCodeDto, @CurrentLanguage() lang: string) {
+		return this.authService.verifySMSCode(dto, lang);
+	}
 }

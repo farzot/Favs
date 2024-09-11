@@ -51,10 +51,11 @@ export class SmallCategoryController {
 	}
 
 	/** get all categories with filter */
-	@Get()
+	@Get("/all")
 	async getAllCategories(@CurrentLanguage() lang: string, @Query() query: FilterDto) {
 		return this.categoryService.getAllCategories(query, lang);
 	}
+
 
 	/** get one category by id */
 	@Get(":id")

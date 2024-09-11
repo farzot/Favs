@@ -48,5 +48,21 @@ export class AddBusinessRequestEntity extends BaseEntity {
 	})
 	public categories!: SmallCategoryEntity[];
 
-	
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "created_by" })
+	created_by!: ExecuterEntity;
+
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "updated_by" })
+	updated_by!: ExecuterEntity;
+
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "deleted_by" })
+	deleted_by!: ExecuterEntity;
 }

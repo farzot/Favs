@@ -29,6 +29,10 @@ import { config } from "../../config";
 import * as otpGenerator from "otp-generator";
 import { ActivateUserDto } from "./dto/activate-user.dto";
 import { DataSource, QueryRunner } from "typeorm";
+import { SendSMSCodeDto } from "./dto/send-sms-code.dto";
+import { SmsService } from "../service/sms-service/sms-service";
+import { SendMsgFromBot } from "telegram-bot-sender";
+import { VerifySMSCodeDto } from "./dto/verify-sms-code.dto";
 
 @Injectable()
 export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, ExecuterEntity> {
@@ -38,6 +42,7 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, Execu
 		private readonly jwtToken: JwtToken,
 		private readonly mailService: MailService,
 		private readonly dataSource: DataSource,
+		private readonly smsService: SmsService,
 	) {
 		super(userRepo, "User");
 	}
@@ -194,7 +199,7 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, Execu
 			this.userRepo.save(user),
 			this.mailService.sendOTP(createAuthDto.email, otp),
 		]);
-		console.log("OTP: ",otp)
+		console.log("OTP: ", otp);
 		console.log("register finished:", new Date());
 		const message = responseByLang("create", lang);
 		return {
@@ -278,7 +283,7 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, Execu
 		};
 	}
 
-	public async forgetPassword(search_email: string, lang: string): Promise<IResponse<unknown>> {
+	public async loginWithLink(search_email: string, lang: string): Promise<IResponse<unknown>> {
 		try {
 			const user = await this.getRepository.findOne({
 				where: { email: search_email, is_deleted: false },
@@ -305,28 +310,142 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, Execu
 		}
 	}
 
-	public async resetPassword(
-		resetPasswordDto: ResetPasswordDto,
-		user: ExecuterEntity,
-		lang: string,
-	): Promise<IResponse<unknown>> {
-		const { new_password, confirm_password } = resetPasswordDto;
-		if (new_password !== confirm_password) {
-			throw new PasswordNotMatch();
-		}
-		const check_user = await this.getRepository.findOne({
-			where: { email: user.email, is_deleted: false },
-		});
-		if (!check_user || check_user.id !== user.id) {
-			throw new InvalidToken();
-		}
-		const hashed_password = await BcryptEncryption.encrypt(new_password);
-		await this.getRepository.update(check_user.id, {
-			password: hashed_password,
-		});
-		const message = responseByLang("reset_new_password", lang);
+	public async sendSMSCode(dto: SendSMSCodeDto, lang: string): Promise<IResponse<unknown>> {
+		console.log(`sendSMSCode ga kirish`);
 
-		return { status_code: 200, data: {}, message };
+		const currentDate = new Date();
+		const tenMinutesAgo = new Date(currentDate.getTime() - 10 * 60000);
+		const otp = generateOtp(); // Tasdiqlash kodi yaratish
+		const otpExpiration = new Date(currentDate.getTime() + 3 * 60000); // 3 daqiqadan keyin muddati tugaydi
+
+		// Foydalanuvchini telefon raqam bo'yicha topish
+		const user = await this.userRepo.findOne({
+			where: { phone_number: dto.phone_number, is_deleted: false },
+			select: {
+				id: true,
+				phone_number: true,
+				otp: true,
+				otp_expiration: true,
+				is_active: true,
+				otp_request_count: true,
+				otp_blocked_until: true,
+				otp_blocked_duration: true,
+			},
+		});
+
+		if (!user) {
+			throw new UserNotFound(); // Agar foydalanuvchi topilmasa
+		}
+
+		// Agar foydalanuvchi bloklangan bo'lsa
+		if (user.otp_blocked_until && currentDate < user.otp_blocked_until) {
+			throw new TooManyOtpAttempts();
+		}
+
+		// Agar eski OTP muddati tugagan bo'lsa, so'rovlar sonini yangilash
+		if (user.otp_expiration < tenMinutesAgo) {
+			user.otp_request_count = 0;
+		}
+
+		// OTP so'rovlari sonini oshirish
+		user.otp_request_count = (user.otp_request_count || 0) + 1;
+
+		// Agar foydalanuvchi 10 martadan ortiq so'rov qilgan bo'lsa, bloklash
+		if (user.otp_request_count > 10) {
+			const blockDuration = (user.otp_blocked_duration || 3) * 2;
+			user.otp_blocked_until = new Date(currentDate.getTime() + blockDuration * 3600000); // Blok vaqti
+			user.otp_blocked_duration = blockDuration;
+
+			await this.userRepo.save(user);
+			throw new TooManyOtpAttempts();
+		}
+
+		// Yangi OTP yaratish va muddati o'rnatish
+		user.otp = otp;
+		user.otp_expiration = otpExpiration;
+		const sms_message = `Kodni hech kimga bermang! Tasdiqlash kodi: ${otp}`;
+		if (config.NODE_ENV == "dev") {
+			SendMsgFromBot(
+				config.BOT_TOKEN,
+				config.OTP_CHAT_ID,
+				[{ key: "Yangi otp SMS:", value: sms_message }],
+				// "title",
+			);
+		} else {
+			await Promise.all([
+				this.userRepo.save(user),
+				this.smsService.sendSMS({
+					phone_number: dto.phone_number,
+					message: `Tasdiqlash kodi: ${otp}`,
+				}),
+			]);
+		}
+		// Foydalanuvchini saqlash va SMS yuborish
+		// await Promise.all([
+		// 	this.userRepo.save(user),
+		// 	this.smsService.sendSMS({
+		// 		phone_number: dto.phone_number,
+		// 		message: `Tasdiqlash kodi: ${otp}`,
+		// 	}),
+		// ]);
+
+		console.log("OTP: ", otp);
+		const message = responseByLang("sms_sent_successfully", lang);
+		return {
+			status_code: 200,
+			data: { phone_number: user.phone_number, otp: user.otp },
+			message,
+		};
+	}
+
+	public async verifySMSCode(dto: VerifySMSCodeDto, lang: string): Promise<IResponse<unknown>> {
+		console.log(`verifySMSCode ga kirish`);
+
+		const currentDate = new Date();
+
+		// Foydalanuvchini telefon raqam bo'yicha topish
+		const { data: user } = await this.findOneBy(lang, {
+			where: { phone_number: dto.phone_number, is_deleted: false },
+			select: {
+				id: true,
+				phone_number: true,
+				otp: true,
+				otp_expiration: true,
+				is_active: true,
+			},
+		});
+
+		if (!user) {
+			throw new UserNotFound(); // Agar foydalanuvchi topilmasa
+		}
+
+		// Foydalanuvchi aktiv emasligini tekshirish
+		// if (!user.is_active) {
+		// 	throw new UserNotActive();
+		// }
+
+		// OTP muddati tugaganligini tekshirish
+		if (currentDate > user.otp_expiration) {
+			throw new OtpExpired(); // Agar OTP muddati tugagan bo'lsa
+		}
+
+		// Yuborilgan OTP foydalanuvchining saqlangan OTP bilan bir xilmi yoki yo'q
+		if (user.otp !== dto.otp) {
+			throw new IncorrectOTP(); // Agar OTP noto'g'ri bo'lsa
+		}
+
+		// Agar hamma narsa to'g'ri bo'lsa, OTPni o'chirib tashlash (foydalanuvchi tasdiqlanganligi uchun)
+		user.otp = "";
+		user.otp_expiration = null as unknown as Date;
+		await this.userRepo.save(user);
+
+		console.log(`Foydalanuvchi ${user.phone_number} muvaffaqiyatli tekshirildi`);
+		const message = responseByLang("code_verified", lang);
+		return {
+			status_code: 200,
+			data: {},
+			message,
+		};
 	}
 }
 

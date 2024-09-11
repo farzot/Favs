@@ -53,7 +53,7 @@ export class SmallCategoryEntity extends BaseEntity {
 	@ManyToMany(() => AddBusinessRequestEntity, (request) => request.categories)
 	public business_requests!: AddBusinessRequestEntity[];
 
-	@ManyToOne(() => BigCategoryEntity, (category) => category.small_categories)
+	@ManyToOne(() => BigCategoryEntity, (category) => category.small_categories, { onDelete: "CASCADE" })
 	@JoinColumn({ name: "big_category_id" })
 	public big_category!: BigCategoryEntity;
 }

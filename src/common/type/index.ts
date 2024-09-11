@@ -22,6 +22,6 @@ export interface AuthPayload {
 	role: Roles;
 	email: string;
 	business_id?: string;
-	store_id?: string;
+	// store_id?: string;
 	// avaliable_stores: any[];
 }

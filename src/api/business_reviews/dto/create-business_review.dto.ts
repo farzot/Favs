@@ -11,7 +11,4 @@ export class CreateBusinessReviewDto {
 
 	@IsNotEmpty()
 	public business!: string;
-
-	@IsNotEmpty()
-	public user!: string;
 }

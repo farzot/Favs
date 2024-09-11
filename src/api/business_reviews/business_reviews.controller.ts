@@ -9,6 +9,7 @@ import {
 	UseInterceptors,
 	UploadedFiles,
 	Query,
+	UseGuards,
 } from "@nestjs/common";
 import { BusinessReviewsService } from "./business_reviews.service";
 import { CreateBusinessReviewDto } from "./dto/create-business_review.dto";
@@ -28,6 +29,8 @@ import { ReviewFilterDto } from "./dto/review-filter.dto";
 import { CurrentExecuter } from "../../common/decorator/current-user";
 import { ICurrentExecuter } from "../../common/interface/current-executer.interface";
 import { ClientBusinessService } from "../business/service/client-business.service";
+import { RolesGuard } from "../auth/roles/RoleGuard";
+import { JwtAuthGuard } from "../auth/user/AuthGuard";
 
 @Controller("/business-review")
 export class BusinessReviewsController {
@@ -38,6 +41,7 @@ export class BusinessReviewsController {
 		@InjectRepository(BusinessReviewEntity)
 		private readonly reviewRepo: BusinessReviewRepository,
 	) {}
+	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Post()
 	@UseInterceptors(FileFieldsInterceptor([{ name: "images", maxCount: 4 }]))
 	public async create(
@@ -45,6 +49,7 @@ export class BusinessReviewsController {
 		@UploadedFiles()
 		files: { images: Express.Multer.File[] },
 		@CurrentLanguage() lang: string,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
 		const new_review = new BusinessReviewEntity();
 		if (!files.images) {
@@ -62,9 +67,13 @@ export class BusinessReviewsController {
 				where: { is_deleted: false },
 			},
 		);
-		const { data: founded_user } = await this.userService.findOneById(dto.business, lang, {
-			where: { is_deleted: false },
-		});
+		const { data: founded_user } = await this.userService.findOneById(
+			executerPayload.executer.id,
+			lang,
+			{
+				where: { is_deleted: false },
+			},
+		);
 		new_review.images = uploaded_files;
 		new_review.text = dto.text;
 		new_review.rating = dto.rating;
@@ -105,6 +114,7 @@ export class BusinessReviewsController {
 		});
 	}
 
+	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Patch(":id")
 	async update(
 		@Param("id") id: string,
@@ -112,17 +122,22 @@ export class BusinessReviewsController {
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
-		await this.businessReviewsService.findOneById(id, lang, { where: { is_deleted: false } });
+		await this.businessReviewsService.findOneById(id, lang, {
+			where: { is_deleted: false, user: { id: executerPayload.executer.id } },
+		});
 		return this.businessReviewsService.update(id, dto, lang, executerPayload.executer);
 	}
 
+	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Delete(":id")
 	async remove(
 		@Param("id") id: string,
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
-		await this.businessReviewsService.findOneById(id, lang, { where: { is_deleted: false } });
+		await this.businessReviewsService.findOneById(id, lang, {
+			where: { is_deleted: false, user: { id: executerPayload.executer.id } },
+		});
 		return this.businessReviewsService.delete(id, lang, executerPayload.executer);
 	}
 }

@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from "@nestjs/common";
+import {
+	Controller,
+	Get,
+	Post,
+	Body,
+	Patch,
+	Param,
+	Delete,
+	Query,
+	UseGuards,
+} from "@nestjs/common";
 import { AdminBusinessService } from "../service/admin-business.service";
 import { CreateBusinessDto } from "../dto/create-business.dto";
 import { UpdateBusinessDto } from "../dto/update-business.dto";
@@ -14,59 +24,32 @@ import { JwtAuthGuard } from "../../auth/user/AuthGuard";
 import { RolesGuard } from "../../auth/roles/RoleGuard";
 import { RolesDecorator } from "../../auth/roles/RolesDecorator";
 import { Roles } from "../../../common/database/Enums";
+import { CurrentExecuter } from '../../../common/decorator/current-user';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller("/admin/business")
 export class AdminBusinessController {
 	constructor(private readonly businessService: AdminBusinessService) {}
 
-	// add-business-request api, business create qilish uchun jo'natiladigan request
-	// @Post("/add-business-request")
-	// public async addBusinessRequest(
-	// 	@Body() dto: AddBusinessRequestDto,
-	// 	@CurrentLanguage() lang: string,
-	// 	executerPayload: ICurrentExecuter,
-	// ) {
-	// 	return this.businessService.addBusinessRequest(dto, lang, executerPayload.executer);
-	// }
-
 	//create business
-	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
 	@Post()
 	public async create(
 		@Body() dto: CreateBusinessDto,
 		@CurrentLanguage() lang: string,
-		executerPayload: ICurrentExecuter,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
 		return this.businessService.createBusiness(dto, lang, executerPayload.executer);
 	}
 
 	// gett all business with filter
-	@UseGuards(JwtAuthGuard, RolesGuard)
+	@RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
 	@Get("/all")
 	async findAll(
 		@CurrentLanguage() lang: string,
 		@Query() query: FilterDto,
 	): Promise<IResponse<BusinessEntity[]>> {
-		let where_condition: FindOptionsWhereProperty<BusinessEntity> = {};
-		if (query?.search) {
-			where_condition = [
-				{
-					name: ILike(`%${query.search}%`),
-					is_deleted: false,
-				},
-			];
-		}
-		let { data: categories } = await this.businessService.findAllWithPagination(lang, {
-			take: query.page_size,
-			skip: query.page,
-			where: where_condition,
-			relations: {},
-			order: { created_at: "DESC" },
-		});
-		// categories = this.businessService.filterCategoryByLang(categories, lang);
-		const message = responseByLang("get_all", lang);
-		return { status_code: 200, data: categories, message };
+		return await this.businessService.findAllBusiness(lang, query);
 	}
 
 	// @Get()

@@ -6,6 +6,7 @@ import { CollectionsEntity } from "./collections.entity";
 import { BusinessPhotosEntity } from "./business-photos.entity";
 import { SmallCategoryEntity } from "./small-category.entity";
 import { ExecuterEntity } from "./executer.entity";
+import { ConsultationRequestEntity } from "./consultation.entity";
 @Entity("business")
 export class BusinessEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
@@ -79,9 +80,12 @@ export class BusinessEntity extends BaseEntity {
 		inverseJoinColumn: { name: "category_id", referencedColumnName: "id" },
 	})
 	public categories!: SmallCategoryEntity[];
-	
+
 	@OneToMany(() => BusinessReviewEntity, (review) => review.business)
 	public reviews!: BusinessReviewEntity[];
+
+	@OneToMany(() => ConsultationRequestEntity, (consultation) => consultation.business)
+	public consultations!: ConsultationRequestEntity[];
 
 	@OneToMany(() => ReservationEntity, (reservation) => reservation.business)
 	public reservations!: ReservationEntity[];

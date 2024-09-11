@@ -47,29 +47,31 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
 					is_active: true,
 					is_deleted: false,
 				},
-				// relations: { business: true, store: { business: true }},
+				relations: { business: true },
 			});
-		} else if (payload.role === Roles.BUSINESS_STORE_ADMIN) {
-			executer = await this.executerRepository.findOne({
-				where: {
-					id: payload.id,
-					role: Roles.BUSINESS_STORE_ADMIN,
-					is_active: true,
-					is_deleted: false,
-				},
-				// relations: { business: true, store: { business: true }},
-			});
-		} else if (payload.role === Roles.BUSINESS_STORE_MANAGER) {
-			executer = await this.executerRepository.findOne({
-				where: {
-					id: payload.id,
-					role: Roles.BUSINESS_STORE_MANAGER,
-					is_active: true,
-					is_deleted: false,
-				},
-				// relations: { business: true, store: { business: true }},
-			});
-		} else if (payload.role === Roles.BUSINESS_MANAGER) {
+		}
+		// else if (payload.role === Roles.BUSINESS_STORE_ADMIN) {
+		// 	executer = await this.executerRepository.findOne({
+		// 		where: {
+		// 			id: payload.id,
+		// 			role: Roles.BUSINESS_STORE_ADMIN,
+		// 			is_active: true,
+		// 			is_deleted: false,
+		// 		},
+		// 		// relations: { business: true, store: { business: true }},
+		// 	});
+		// } else if (payload.role === Roles.BUSINESS_STORE_MANAGER) {
+		// 	executer = await this.executerRepository.findOne({
+		// 		where: {
+		// 			id: payload.id,
+		// 			role: Roles.BUSINESS_STORE_MANAGER,
+		// 			is_active: true,
+		// 			is_deleted: false,
+		// 		},
+		// 		// relations: { business: true, store: { business: true }},
+		// 	});
+		// }
+		else if (payload.role === Roles.BUSINESS_MANAGER) {
 			executer = await this.executerRepository.findOne({
 				where: {
 					id: payload.id,
@@ -77,7 +79,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
 					is_active: true,
 					is_deleted: false,
 				},
-				// relations: { business: true, store: { business: true }},
+				relations: { business: true },
 			});
 		} else if (payload.role === Roles.BUSINESS_OWNER) {
 			executer = await this.executerRepository.findOne({
@@ -87,7 +89,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
 					is_active: true,
 					is_deleted: false,
 				},
-				// relations: { business: true, store: { business: true }},
+				relations: { business: true },
 			});
 		} else if (payload.role === Roles.SUPER_ADMIN) {
 			executer = await this.executerRepository.findOne({
@@ -97,7 +99,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
 					is_active: true,
 					is_deleted: false,
 				},
-				// relations: { business: true, store: { business: true }},
+				relations: { business: true },
 			});
 		}
 		if (!executer) {
@@ -107,7 +109,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
 		return {
 			executer,
 			business: payload.business_id,
-			store: payload.store_id,
+			// store: payload.store_id,
 			// avaliable_stores: payload.avaliable_stores,
 		};
 	}

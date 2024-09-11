@@ -4,7 +4,7 @@ import { UpdateBusinessDto } from "../dto/update-business.dto";
 import { BaseService } from "../../../infrastructure/lib/baseService";
 import { InjectRepository } from "@nestjs/typeorm";
 import { BusinessEntity } from "../../../core/entity/business.entity";
-import { DataSource, Repository } from "typeorm";
+import { DataSource, FindOptionsWhereProperty, ILike, Repository } from "typeorm";
 import { AddBusinessRequestDto } from "../dto/add-business-request.dto";
 import {
 	AddBusinessRequestEntity,
@@ -17,6 +17,7 @@ import { IResponse } from "../../../common/type";
 import { responseByLang } from "../../../infrastructure/lib/prompts/successResponsePrompt";
 import { Roles } from "../../../common/database/Enums";
 import { BcryptEncryption } from "../../../infrastructure/lib/bcrypt";
+import { FilterDto } from "../../../common/dto/filter.dto";
 
 @Injectable()
 export class AdminBusinessService extends BaseService<
@@ -54,6 +55,7 @@ export class AdminBusinessService extends BaseService<
 			newExecuter.role = Roles.BUSINESS_OWNER; // Rolni to'g'ri belgilang
 			newExecuter.created_by = executer;
 			newExecuter.username = dto.username;
+			newExecuter.email="1";
 			newExecuter.password = await BcryptEncryption.encrypt(dto.password);
 
 			await query.manager.save("executers", newExecuter);
@@ -77,7 +79,7 @@ export class AdminBusinessService extends BaseService<
 			// Kategoriyalarni qo'shish
 			let categories: any = [];
 			for (const categoryId of dto.categories) {
-				const category = await this.smallCategoryService.findOneById(lang, categoryId);
+				const category = await this.smallCategoryService.findOneById(categoryId,lang);
 				if (!category) {
 					throw new Error(`Category with ID ${categoryId} not found`);
 				}
@@ -98,5 +100,29 @@ export class AdminBusinessService extends BaseService<
 		} finally {
 			await query.release();
 		}
+	}
+
+	public async findAllBusiness(
+		lang: string,
+		query: FilterDto,
+	): Promise<IResponse<BusinessEntity[]>> {
+		let where_condition: FindOptionsWhereProperty<BusinessEntity> = {};
+		if (query?.search) {
+			where_condition = [
+				{
+					name: ILike(`%${query.search}%`),
+					is_deleted: false,
+				},
+			];
+		}
+		let { data: businesses } = await this.findAllWithPagination(lang, {
+			take: query.page_size,
+			skip: query.page,
+			where: where_condition,
+			relations: { owner: true },
+			order: { created_at: "DESC" },
+		});
+		const message = responseByLang("get_all", lang);
+		return { status_code: 200, data: businesses, message };
 	}
 }

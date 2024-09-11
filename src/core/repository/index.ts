@@ -19,3 +19,4 @@ export { BusinessPhotoRepository } from "./business-photo.repository";
 export { BusinessReviewRepository } from "./business-review.repository";
 export { NotificationRepository } from "./notification.repository";
 export { ExecuterRepository } from "./executer.repository";
+export { SMSTokenRepository } from "./sms-token.repository";

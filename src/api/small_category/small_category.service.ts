@@ -11,6 +11,9 @@ import { ProductService } from "../product/product.service";
 import { UpdateSmallCategoryDto } from "./dto/update-category.dto";
 import { SmallCategoryRepository } from "../../core/repository";
 import { ExecuterEntity } from "../../core/entity/executer.entity";
+import { BigCategoryService } from "../big_category/big_category.service";
+import { BigCategoryEntity, BusinessEntity } from "../../core/entity";
+import { ClientBusinessService } from "../business/service/client-business.service";
 
 @Injectable()
 export class SmallCategoryService extends BaseService<
@@ -63,6 +66,8 @@ export class SmallCategoryService extends BaseService<
 		const message = responseByLang("get_all", lang);
 		return { status_code: 200, data: categories, message };
 	}
+
+	
 
 	public filterCategoryByLang(dto: SmallCategoryEntity[], lang: string) {
 		return dto.map((item) => {
