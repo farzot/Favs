@@ -41,7 +41,7 @@ export class BigCategoryController {
 		return await this.bigCategoryService.create(dto, lang, executerPayload.executer);
 	}
 
-	@Get("all")
+	@Get("/all")
 	async findAll(
 		@CurrentLanguage() lang: string,
 		@Query() query: FilterDto,
