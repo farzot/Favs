@@ -310,136 +310,207 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, Execu
 		}
 	}
 
+	// public async sendSMSCode(dto: SendSMSCodeDto, lang: string): Promise<IResponse<unknown>> {
+	// 	console.log(`sendSMSCode ga kirish`);
+
+	// 	const currentDate = new Date();
+	// 	const tenMinutesAgo = new Date(currentDate.getTime() - 10 * 60000);
+	// 	const otp = generateOtp(); // Tasdiqlash kodi yaratish
+	// 	const otpExpiration = new Date(currentDate.getTime() + 3 * 60000); // 3 daqiqadan keyin muddati tugaydi
+
+	// 	// Foydalanuvchini telefon raqam bo'yicha topish
+	// 	const user = await this.userRepo.findOne({
+	// 		where: { phone_number: dto.phone_number, is_deleted: false },
+	// 		select: {
+	// 			id: true,
+	// 			phone_number: true,
+	// 			otp: true,
+	// 			otp_expiration: true,
+	// 			is_active: true,
+	// 			otp_request_count: true,
+	// 			otp_blocked_until: true,
+	// 			otp_blocked_duration: true,
+	// 		},
+	// 	});
+
+	// 	if (!user) {
+	// 		throw new UserNotFound(); // Agar foydalanuvchi topilmasa
+	// 	}
+
+	// 	// Agar foydalanuvchi bloklangan bo'lsa
+	// 	if (user.otp_blocked_until && currentDate < user.otp_blocked_until) {
+	// 		throw new TooManyOtpAttempts();
+	// 	}
+
+	// 	// Agar eski OTP muddati tugagan bo'lsa, so'rovlar sonini yangilash
+	// 	if (user.otp_expiration < tenMinutesAgo) {
+	// 		user.otp_request_count = 0;
+	// 	}
+
+	// 	// OTP so'rovlari sonini oshirish
+	// 	user.otp_request_count = (user.otp_request_count || 0) + 1;
+
+	// 	// Agar foydalanuvchi 10 martadan ortiq so'rov qilgan bo'lsa, bloklash
+	// 	if (user.otp_request_count > 10) {
+	// 		const blockDuration = (user.otp_blocked_duration || 3) * 2;
+	// 		user.otp_blocked_until = new Date(currentDate.getTime() + blockDuration * 3600000); // Blok vaqti
+	// 		user.otp_blocked_duration = blockDuration;
+
+	// 		await this.userRepo.save(user);
+	// 		throw new TooManyOtpAttempts();
+	// 	}
+
+	// 	// Yangi OTP yaratish va muddati o'rnatish
+	// 	user.otp = otp;
+	// 	user.otp_expiration = otpExpiration;
+	// 	const sms_message = `Kodni hech kimga bermang! Tasdiqlash kodi: ${otp}`;
+	// 	if (config.NODE_ENV == "dev") {
+	// 		SendMsgFromBot(
+	// 			config.BOT_TOKEN,
+	// 			config.OTP_CHAT_ID,
+	// 			[{ key: "Yangi otp SMS:", value: sms_message }],
+	// 			// "title",
+	// 		);
+	// 	} else {
+	// 		await Promise.all([
+	// 			this.userRepo.save(user),
+	// 			this.smsService.sendSMS({
+	// 				phone_number: dto.phone_number,
+	// 				message: `Tasdiqlash kodi: ${otp}`,
+	// 			}),
+	// 		]);
+	// 	}
+	// 	// Foydalanuvchini saqlash va SMS yuborish
+	// 	// await Promise.all([
+	// 	// 	this.userRepo.save(user),
+	// 	// 	this.smsService.sendSMS({
+	// 	// 		phone_number: dto.phone_number,
+	// 	// 		message: `Tasdiqlash kodi: ${otp}`,
+	// 	// 	}),
+	// 	// ]);
+
+	// 	console.log("OTP: ", otp);
+	// 	const message = responseByLang("sms_sent_successfully", lang);
+	// 	return {
+	// 		status_code: 200,
+	// 		data: { phone_number: user.phone_number, otp: user.otp },
+	// 		message,
+	// 	};
+	// }
+
+	// Xotirada vaqtinchalik OTP saqlash uchun obyekt
+	otpStore = new Map<string, { otp: string; expiration: Date }>();
+
 	public async sendSMSCode(dto: SendSMSCodeDto, lang: string): Promise<IResponse<unknown>> {
 		console.log(`sendSMSCode ga kirish`);
 
 		const currentDate = new Date();
-		const tenMinutesAgo = new Date(currentDate.getTime() - 10 * 60000);
 		const otp = generateOtp(); // Tasdiqlash kodi yaratish
 		const otpExpiration = new Date(currentDate.getTime() + 3 * 60000); // 3 daqiqadan keyin muddati tugaydi
+		console.log("otpStore",this.otpStore)
+		// Telefon raqamiga yuboriladigan OTP va expiration xotirada saqlanadi
+		this.otpStore.set(dto.phone_number, { otp, expiration: otpExpiration });
 
-		// Foydalanuvchini telefon raqam bo'yicha topish
-		const user = await this.userRepo.findOne({
-			where: { phone_number: dto.phone_number, is_deleted: false },
-			select: {
-				id: true,
-				phone_number: true,
-				otp: true,
-				otp_expiration: true,
-				is_active: true,
-				otp_request_count: true,
-				otp_blocked_until: true,
-				otp_blocked_duration: true,
-			},
-		});
-
-		if (!user) {
-			throw new UserNotFound(); // Agar foydalanuvchi topilmasa
-		}
-
-		// Agar foydalanuvchi bloklangan bo'lsa
-		if (user.otp_blocked_until && currentDate < user.otp_blocked_until) {
-			throw new TooManyOtpAttempts();
-		}
-
-		// Agar eski OTP muddati tugagan bo'lsa, so'rovlar sonini yangilash
-		if (user.otp_expiration < tenMinutesAgo) {
-			user.otp_request_count = 0;
-		}
-
-		// OTP so'rovlari sonini oshirish
-		user.otp_request_count = (user.otp_request_count || 0) + 1;
-
-		// Agar foydalanuvchi 10 martadan ortiq so'rov qilgan bo'lsa, bloklash
-		if (user.otp_request_count > 10) {
-			const blockDuration = (user.otp_blocked_duration || 3) * 2;
-			user.otp_blocked_until = new Date(currentDate.getTime() + blockDuration * 3600000); // Blok vaqti
-			user.otp_blocked_duration = blockDuration;
-
-			await this.userRepo.save(user);
-			throw new TooManyOtpAttempts();
-		}
-
-		// Yangi OTP yaratish va muddati o'rnatish
-		user.otp = otp;
-		user.otp_expiration = otpExpiration;
 		const sms_message = `Kodni hech kimga bermang! Tasdiqlash kodi: ${otp}`;
+
 		if (config.NODE_ENV == "dev") {
-			SendMsgFromBot(
-				config.BOT_TOKEN,
-				config.OTP_CHAT_ID,
-				[{ key: "Yangi otp SMS:", value: sms_message }],
-				// "title",
-			);
-		} else {
-			await Promise.all([
-				this.userRepo.save(user),
-				this.smsService.sendSMS({
-					phone_number: dto.phone_number,
-					message: `Tasdiqlash kodi: ${otp}`,
-				}),
+			SendMsgFromBot(config.BOT_TOKEN, config.OTP_CHAT_ID, [
+				{ key: "Yangi otp SMS:", value: sms_message },
 			]);
+		} else {
+			await this.smsService.sendSMS({
+				phone_number: dto.phone_number,
+				message: `Tasdiqlash kodi: ${otp}`,
+			});
 		}
-		// Foydalanuvchini saqlash va SMS yuborish
-		// await Promise.all([
-		// 	this.userRepo.save(user),
-		// 	this.smsService.sendSMS({
-		// 		phone_number: dto.phone_number,
-		// 		message: `Tasdiqlash kodi: ${otp}`,
-		// 	}),
-		// ]);
 
 		console.log("OTP: ", otp);
 		const message = responseByLang("sms_sent_successfully", lang);
 		return {
 			status_code: 200,
-			data: { phone_number: user.phone_number, otp: user.otp },
+			data: { phone_number: dto.phone_number },
 			message,
 		};
 	}
+
+	// public async verifySMSCode(dto: VerifySMSCodeDto, lang: string): Promise<IResponse<unknown>> {
+	// 	console.log(`verifySMSCode ga kirish`);
+
+	// 	const currentDate = new Date();
+
+	// 	// Foydalanuvchini telefon raqam bo'yicha topish
+	// 	const { data: user } = await this.findOneBy(lang, {
+	// 		where: { phone_number: dto.phone_number, is_deleted: false },
+	// 		select: {
+	// 			id: true,
+	// 			phone_number: true,
+	// 			otp: true,
+	// 			otp_expiration: true,
+	// 			is_active: true,
+	// 		},
+	// 	});
+
+	// 	if (!user) {
+	// 		throw new UserNotFound(); // Agar foydalanuvchi topilmasa
+	// 	}
+
+	// 	// Foydalanuvchi aktiv emasligini tekshirish
+	// 	// if (!user.is_active) {
+	// 	// 	throw new UserNotActive();
+	// 	// }
+
+	// 	// OTP muddati tugaganligini tekshirish
+	// 	if (currentDate > user.otp_expiration) {
+	// 		throw new OtpExpired(); // Agar OTP muddati tugagan bo'lsa
+	// 	}
+
+	// 	// Yuborilgan OTP foydalanuvchining saqlangan OTP bilan bir xilmi yoki yo'q
+	// 	if (user.otp !== dto.otp) {
+	// 		throw new IncorrectOTP(); // Agar OTP noto'g'ri bo'lsa
+	// 	}
+
+	// 	// Agar hamma narsa to'g'ri bo'lsa, OTPni o'chirib tashlash (foydalanuvchi tasdiqlanganligi uchun)
+	// 	user.otp = "";
+	// 	user.otp_expiration = null as unknown as Date;
+	// 	await this.userRepo.save(user);
+
+	// 	console.log(`Foydalanuvchi ${user.phone_number} muvaffaqiyatli tekshirildi`);
+	// 	const message = responseByLang("code_verified", lang);
+	// 	return {
+	// 		status_code: 200,
+	// 		data: {},
+	// 		message,
+	// 	};
+	// }
 
 	public async verifySMSCode(dto: VerifySMSCodeDto, lang: string): Promise<IResponse<unknown>> {
 		console.log(`verifySMSCode ga kirish`);
 
 		const currentDate = new Date();
 
-		// Foydalanuvchini telefon raqam bo'yicha topish
-		const { data: user } = await this.findOneBy(lang, {
-			where: { phone_number: dto.phone_number, is_deleted: false },
-			select: {
-				id: true,
-				phone_number: true,
-				otp: true,
-				otp_expiration: true,
-				is_active: true,
-			},
-		});
+		// Xotiradan telefon raqamiga yuborilgan OTP va expirationni olish
+		const otpData = this.otpStore.get(dto.phone_number);
 
-		if (!user) {
-			throw new UserNotFound(); // Agar foydalanuvchi topilmasa
+		if (!otpData) {
+			throw new OtpExpired(); // Agar xotirada ma'lumot topilmasa, OTP muddati tugagan
 		}
 
-		// Foydalanuvchi aktiv emasligini tekshirish
-		// if (!user.is_active) {
-		// 	throw new UserNotActive();
-		// }
+		const { otp, expiration } = otpData;
 
 		// OTP muddati tugaganligini tekshirish
-		if (currentDate > user.otp_expiration) {
+		if (currentDate > expiration) {
 			throw new OtpExpired(); // Agar OTP muddati tugagan bo'lsa
 		}
 
-		// Yuborilgan OTP foydalanuvchining saqlangan OTP bilan bir xilmi yoki yo'q
-		if (user.otp !== dto.otp) {
+		// Yuborilgan OTP foydalanuvchining xotirada saqlangan OTP bilan bir xilmi yoki yo'q
+		if (otp !== dto.otp) {
 			throw new IncorrectOTP(); // Agar OTP noto'g'ri bo'lsa
 		}
 
-		// Agar hamma narsa to'g'ri bo'lsa, OTPni o'chirib tashlash (foydalanuvchi tasdiqlanganligi uchun)
-		user.otp = "";
-		user.otp_expiration = null as unknown as Date;
-		await this.userRepo.save(user);
+		// Xotiradan OTP ma'lumotlarini o'chirish (tasdiqlashdan keyin)
+		this.otpStore.delete(dto.phone_number);
 
-		console.log(`Foydalanuvchi ${user.phone_number} muvaffaqiyatli tekshirildi`);
+		console.log(`Foydalanuvchi ${dto.phone_number} muvaffaqiyatli tasdiqlandi`);
 		const message = responseByLang("code_verified", lang);
 		return {
 			status_code: 200,

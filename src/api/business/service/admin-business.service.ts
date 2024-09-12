@@ -37,9 +37,10 @@ export class AdminBusinessService extends BaseService<
 
 	public async createBusiness(
 		dto: CreateBusinessDto,
-		lang: string = "ru",
+		lang: string,
 		executer: ExecuterEntity,
 	): Promise<IResponse<BusinessEntity>> {
+		console.log("Service kirish");
 		const query = this.dataSource.createQueryRunner();
 		await query.connect();
 		await query.startTransaction();
@@ -53,12 +54,13 @@ export class AdminBusinessService extends BaseService<
 			newExecuter.phone_number = dto.phone_number;
 			newExecuter.birth_date = dto.birth_date;
 			newExecuter.role = Roles.BUSINESS_OWNER; // Rolni to'g'ri belgilang
-			newExecuter.created_by = executer;
+			// newExecuter.created_by = executer;
 			newExecuter.username = dto.username;
-			newExecuter.email="1";
+			newExecuter.email = "1";
 			newExecuter.password = await BcryptEncryption.encrypt(dto.password);
-
+			console.log("executerni save qilishdan oldin");
 			await query.manager.save("executers", newExecuter);
+			console.log("executerni save qilishdan keyin");
 
 			// Yangi biznes yaratish
 			const newBusiness = new BusinessEntity();
@@ -79,19 +81,20 @@ export class AdminBusinessService extends BaseService<
 			// Kategoriyalarni qo'shish
 			let categories: any = [];
 			for (const categoryId of dto.categories) {
-				const category = await this.smallCategoryService.findOneById(categoryId,lang);
+				const category = await this.smallCategoryService.findOneById(categoryId, lang);
 				if (!category) {
 					throw new Error(`Category with ID ${categoryId} not found`);
 				}
-				categories.push(category);
+				categories.push(category.data); // Faqat categoryning `data` qismini olish
 			}
-			newBusiness.categories = categories;
+			newBusiness.categories = categories; // categories faqat kerakli qismini olish
 
+			console.log("Business save qilishdan oldin");
 			// Yangi biznesni saqlash
-			await query.manager.save("businesses", newBusiness);
+			await query.manager.save("business", newBusiness);
 
 			await query.commitTransaction();
-
+			console.log("Finish");
 			const message = responseByLang("create", lang);
 			return { status_code: 201, data: newBusiness, message };
 		} catch (error) {

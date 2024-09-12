@@ -125,6 +125,7 @@ export class BaseService<CreateDto, UpdateDto, Entity> {
 	}
 
 	async update(id: string, dto: UpdateDto, lang: string, executer?: ExecuterEntity) {
+		console.log("dto",dto)
 		await this.repository.update(id, {
 			...dto,
 			updated_by: executer,

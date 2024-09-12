@@ -2,9 +2,11 @@ import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { BaseEntity } from "../../common/database/BaseEntity";
 import { BusinessEntity } from "./business.entity";
 import { ExecuterEntity } from "./executer.entity";
+import { MinLength } from "class-validator";
 @Entity("business_reviews")
 export class BusinessReviewEntity extends BaseEntity {
-	@Column({ type: "varchar", length: 12 })
+	@Column({ type: "varchar"})
+	@MinLength(25)
 	public text!: string;
 
 	@Column({ type: "int" })

@@ -46,20 +46,23 @@ export class BusinessReviewsController {
 	@UseInterceptors(FileFieldsInterceptor([{ name: "images", maxCount: 4 }]))
 	public async create(
 		@Body() dto: CreateBusinessReviewDto,
-		@UploadedFiles()
-		files: { images: Express.Multer.File[] },
+		@UploadedFiles() files: { images?: Express.Multer.File[] }, // Fayl optional bo'ldi
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
 		const new_review = new BusinessReviewEntity();
-		if (!files.images) {
-			throw new FileRequiredException();
-		}
+
+		// Fayllar bo'lmasa bo'sh ro'yxat yaratish
 		let uploaded_files: string[] = [];
-		files.images.map(async (image: any) => {
-			const uploaded = await createFile(image);
-			uploaded_files.push(uploaded);
-		});
+		if (files?.images && files.images.length > 0) {
+			await Promise.all(
+				files.images.map(async (image: any) => {
+					const uploaded = await createFile(image);
+					uploaded_files.push(uploaded);
+				}),
+			);
+		}
+
 		const { data: founded_business } = await this.businessService.findOneById(
 			dto.business,
 			lang,
@@ -74,11 +77,13 @@ export class BusinessReviewsController {
 				where: { is_deleted: false },
 			},
 		);
+
 		new_review.images = uploaded_files;
 		new_review.text = dto.text;
 		new_review.rating = dto.rating;
 		new_review.business = founded_business;
 		new_review.user = founded_user;
+
 		const data = await this.reviewRepo.save(new_review);
 		const message = responseByLang("create", lang);
 		return {
@@ -90,7 +95,7 @@ export class BusinessReviewsController {
 
 	@Get()
 	async findAll(@CurrentLanguage() lang: string, @Query() query: ReviewFilterDto) {
-		let where_condition: FindOptionsWhereProperty<BusinessReviewEntity> = {};
+		let where_condition: FindOptionsWhereProperty<BusinessReviewEntity> = { is_deleted: false };
 		if (query.username) {
 			where_condition = [
 				{ user: { username: query.username, is_deleted: false }, is_deleted: false },
@@ -100,7 +105,7 @@ export class BusinessReviewsController {
 			take: query.page_size,
 			skip: query.page,
 			where: where_condition,
-			relations: {},
+			relations: { user: true },
 			order: { created_at: "DESC" },
 		});
 		const message = responseByLang("get_all", lang);
@@ -109,8 +114,9 @@ export class BusinessReviewsController {
 
 	@Get(":id")
 	async findOne(@Param("id") id: string, @CurrentLanguage() lang: string) {
-		await this.businessReviewsService.findOneById(id, lang, {
+		return await this.businessReviewsService.findOneById(id, lang, {
 			where: { is_deleted: false },
+			relations: { user: true },
 		});
 	}
 
@@ -122,10 +128,11 @@ export class BusinessReviewsController {
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
+		console.log(dto);
 		await this.businessReviewsService.findOneById(id, lang, {
 			where: { is_deleted: false, user: { id: executerPayload.executer.id } },
 		});
-		return this.businessReviewsService.update(id, dto, lang, executerPayload.executer);
+		return this.businessReviewsService.update(id, dto, lang);
 	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
@@ -138,6 +145,6 @@ export class BusinessReviewsController {
 		await this.businessReviewsService.findOneById(id, lang, {
 			where: { is_deleted: false, user: { id: executerPayload.executer.id } },
 		});
-		return this.businessReviewsService.delete(id, lang, executerPayload.executer);
+		return this.businessReviewsService.delete(id, lang);
 	}
 }

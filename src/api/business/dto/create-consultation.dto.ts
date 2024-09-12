@@ -15,6 +15,7 @@ export class CreateConsultationDto {
     @IsString()
 	comment!: string;
 
+	@IsNotEmpty()
 	@ValidateNested({ each: true })
 	@Type(() => ObjDto)
 	public business!: ObjDto;
