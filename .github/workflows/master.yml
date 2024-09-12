@@ -88,5 +88,5 @@ jobs:
           echo "${{ secrets.ENV_FILE_DEV }}" > /root/projects/favs_dev/.env
           npm i
           npm run build
-          pm2 restart favs_dev || pm2 start dist/main.js --name "favs_dev"
+          pm2 restart favs_dev || pm2 start npm —name="favs_dev" — run start
           pm2 save
