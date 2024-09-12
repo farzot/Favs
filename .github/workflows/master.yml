@@ -31,12 +31,13 @@ jobs:
         username: root
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
+          git config --global --add safe.directory /root/projects/favs_dev
           mkdir -p /root/projects/favs_dev
           cd /root/projects/favs_dev
-          git init
-          git pull https://github.com/farzot/Favs.git
+          git pull https://github.com/farzot/Favs.git || git clone https://github.com/farzot/Favs.git .
           echo "${{ secrets.ENV_FILE_DEV }}" > /root/projects/favs_dev/.env
           npm i
           npm run build
           pm2 reload favs_dev || pm2 start dist/main.js --name "favs_dev"
           pm2 save
+
