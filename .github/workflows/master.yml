@@ -76,19 +76,21 @@ jobs:
       if: github.ref == 'refs/heads/dev'
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.SERVER_IP}}
+        host: ${{ secrets.SERVER_IP }}
         username: root
-        key: ${{ secrets.SSH_PRIVATE_KEY  }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           mkdir -p /root/projects/favs_dev
           cd /root/projects/favs_dev
-           if [ -d ".git" ]; then
-            git pull
+          if [ -d ".git" ]; then
+            git fetch origin
+            git checkout dev
+            git pull origin dev
           else
-            git clone https://github.com/farzot/Favs.git .
+            git clone -b dev git@github.com:farzot/Favs.git .
           fi
           npm install
           npm run build
-          echo "${{  secrets.ENV_FILE_DEV  }}" > /root/mebel-house/.env
+          echo "${{ secrets.ENV_FILE_DEV }}" > /root/projects/favs_dev/.env
           pm2 reload favs_dev || pm2 start dist/main.js --name "favs_dev"
           pm2 save
