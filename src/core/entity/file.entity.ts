@@ -1,17 +1,54 @@
-import { BaseEntity } from "src/common/database/BaseEntity";
-import { Column, Entity } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { ExecuterEntity } from "./executer.entity";
 
 @Entity("files")
-export class FileEntity extends BaseEntity {
-    @Column({ name: "file_name", type: "varchar" })
-    file_name!: string;
+export class FileEntity {
+	@PrimaryGeneratedColumn("uuid")
+	id!: string;
 
-    @Column({ name: "path", type: "varchar" })
-    path!: string;
+	@Column({ name: "file_name", type: "varchar" })
+	file_name!: string;
 
-    @Column({ name: "size", type: "int" })
-    size!: number;
+	@Column({ name: "path", type: "varchar" })
+	path!: string;
 
-    @Column({ name: "mime_type", type: "varchar" })
-    mime_type!: string;
+	@Column({ name: "size", type: "int" })
+	size!: number;
+
+	@Column({ name: "mime_type", type: "varchar" })
+	mime_type!: string;
+
+	@OneToMany(() => ExecuterEntity, (executer) => executer.image, { onDelete: "CASCADE" })
+	executers!: ExecuterEntity[];
+
+	@Column({
+		name: "is_active",
+		type: "boolean",
+		default: true,
+	})
+	is_active!: boolean;
+
+	@Column({
+		name: "is_deleted",
+		type: "boolean",
+		default: false,
+	})
+	is_deleted!: boolean;
+
+	@Column({
+		name: "created_at",
+		type: "bigint",
+		default: () => "EXTRACT(epoch FROM NOW()) * 1000",
+	})
+	created_at!: number;
+
+	@Column({
+		name: "updated_at",
+		type: "bigint",
+		default: Date.now(),
+	})
+	updated_at!: number;
+
+	@Column({ name: "deleted_at", type: "bigint", nullable: true })
+	deleted_at!: number;
 }

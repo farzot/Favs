@@ -1,7 +1,7 @@
 import { BaseEntity } from "src/common/database/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { ProductEntity } from "./product.entity";
-import { UserEntity } from "./user.entity";
+import { ExecuterEntity } from "./executer.entity";
 
 @Entity("feedbacks")
 export class FeedbackEntity extends BaseEntity {
@@ -18,7 +18,7 @@ export class FeedbackEntity extends BaseEntity {
 	@JoinColumn({ name: "product_id" })
 	public product!: ProductEntity;
 
-	@ManyToOne(() => UserEntity, (user) => user.feedbacks)
+	@ManyToOne(() => ExecuterEntity, (user) => user.feedbacks)
 	@JoinColumn({ name: "user_id" })
-	public user!: UserEntity;
+	public user!: ExecuterEntity;
 }

@@ -5,10 +5,10 @@ export class PaginationDto {
 	@IsOptional()
 	@IsNumber()
 	@Type(() => Number)
-	page!: number ;
+	page!: number;
 
 	@IsOptional()
 	@IsNumber()
 	@Type(() => Number)
-	page_size!: number ;
+	page_size!: number;
 }

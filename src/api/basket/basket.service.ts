@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { BasketEntity, UserEntity } from "src/core/entity";
+import { BasketEntity, ExecuterEntity } from "src/core/entity";
 import { BasketRepository } from "src/core/repository";
 import { BaseService } from "src/infrastructure/lib/baseService";
 import { responseByLang } from "src/infrastructure/lib/prompts/successResponsePrompt";
@@ -27,7 +27,7 @@ export class BasketService extends BaseService<CreateBasketDto, UpdateBasketDto,
 	public async createBasket(
 		dto: CreateBasketDto,
 		lang: string,
-		user: UserEntity,
+		user: ExecuterEntity,
 	): Promise<IResponse<BasketEntity[]>> {
 		const old_basket = await this.basketRepo.findOne({
 			where: { user, product: { id: dto.product.id } },
@@ -62,7 +62,7 @@ export class BasketService extends BaseService<CreateBasketDto, UpdateBasketDto,
 		id: string,
 		dto: UpdateBasketDto,
 		lang: string,
-		user: UserEntity,
+		user: ExecuterEntity,
 	): Promise<IResponse<BasketEntity[]>> {
 		const { data: basket } = await this.findOneBy(lang, {
 			where: { user, product: { id, is_deleted: false } },
@@ -92,7 +92,7 @@ export class BasketService extends BaseService<CreateBasketDto, UpdateBasketDto,
 	public async createMultipleBasket(
 		dto: CreateMultipleBasketDto,
 		lang: string,
-		user: UserEntity,
+		user: ExecuterEntity,
 	): Promise<IResponse<BasketEntity[]>> {
 		const query = this.dataSource.createQueryRunner();
 		await query.connect();
@@ -100,7 +100,7 @@ export class BasketService extends BaseService<CreateBasketDto, UpdateBasketDto,
 
 		try {
 			for (let basket of dto.basket) {
-				const old_basket = await this.basketRepo.findOne({
+				const existingBasket = await this.basketRepo.findOne({
 					where: { user, product: { id: basket.product.id } },
 				});
 
@@ -110,28 +110,25 @@ export class BasketService extends BaseService<CreateBasketDto, UpdateBasketDto,
 					{ where: { is_deleted: false } },
 				);
 
-				if (old_basket) {
-					let total_quantity = 0;
+				if (existingBasket) {
+					const totalQuantity = Math.min(
+						basket.amount + existingBasket.amount,
+						product.amount,
+					);
 
-					if (product.amount >= basket.amount + old_basket.amount) {
-						total_quantity = basket.amount + old_basket.amount;
-					} else {
-						total_quantity = basket.amount;
-					}
-
-					if (total_quantity > product.amount) {
+					if (totalQuantity > product.amount) {
 						throw new NotEnoughProduct();
 					}
 
-					await query.manager.update("user_basket", old_basket.id, {
-						amount: total_quantity,
+					await query.manager.update("user_basket", existingBasket.id, {
+						amount: totalQuantity,
 					});
 				} else {
 					if (product.amount < basket.amount) {
 						throw new NotEnoughProduct();
 					}
-					const create_basket = query.manager.create("user_basket", { ...basket, user });
-					await query.manager.save("user_basket", create_basket);
+					const newBasket = query.manager.create(BasketEntity, { ...basket, user });
+					await query.manager.save(BasketEntity, newBasket);
 				}
 			}
 
@@ -143,18 +140,18 @@ export class BasketService extends BaseService<CreateBasketDto, UpdateBasketDto,
 			await query.release();
 		}
 
-		const all_basket = await this.basketRepo.find({
+		const allBasket = await this.basketRepo.find({
 			where: { user },
 			relations: { product: true },
 			order: { id: "DESC" },
 		});
 		const message = responseByLang("create", lang);
 
-		return { status_code: 201, data: all_basket, message };
+		return { status_code: 201, data: allBasket, message };
 	}
 
 	/** delete all user baskets */
-	public async removeAllUserBasket(lang: string, user: UserEntity): Promise<IResponse<[]>> {
+	public async removeAllUserBasket(lang: string, user: ExecuterEntity): Promise<IResponse<[]>> {
 		const { data: user_baskets } = await this.findAll(lang, {
 			where: { user: { id: user.id } },
 		});
@@ -170,7 +167,7 @@ export class BasketService extends BaseService<CreateBasketDto, UpdateBasketDto,
 	}
 
 	/** get all user baskets */
-	public async findUserBaskets(lang: string, user: UserEntity) {
+	public async findUserBaskets(lang: string, user: ExecuterEntity) {
 		const basket = await this.findAll(lang, {
 			where: { user: user },
 			relations: { product: true },

@@ -1,0 +1,96 @@
+# name: CI and Deploy to Server
+
+# on:
+#   push:
+#     branches:
+#       - dev
+
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: Checkout repository
+#       uses: actions/checkout@v3
+
+#     - name: Set up Node.js
+#       uses: actions/setup-node@v3
+#       with:
+#         node-version: '20.10.0'
+
+#     - name: Install dependencies
+#       run: npm install
+
+#     - name: Build project
+#       run: npm run build
+
+#     - name: Execute remote commands via SSH
+#       uses: appleboy/ssh-action@v1.0.3
+#       with:
+#         host: ${{ secrets.SERVER_IP }}
+#         username: root
+#         key: ${{ secrets.SSH_PRIVATE_KEY }}
+#         script: |
+#           # git config --global --add safe.directory /root/projects/favs_dev
+#           mkdir -p /root/projects/favs_dev
+#           cd /root/projects/favs_dev
+#           if [ -d ".git" ]; then
+#             git pull
+#           else
+#             git clone https://github.com/farzot/Favs.git .
+#           fi
+#           echo "${{ secrets.ENV_FILE_DEV }}" > /root/projects/favs_dev/.env
+#           npm i
+#           npm run build
+#           pm2 reload favs_dev || pm2 start dist/main.js --name "favs_dev"
+#           pm2 save
+
+name: CI and Deploy to Server
+
+on:
+  push:
+    branches:
+      - dev
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.10.0'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build project
+      run: npm run build
+
+    - name: Deploy to development server
+      if: github.ref == 'refs/heads/dev'
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          mkdir -p /root/projects/favs_dev
+          cd /root/projects/favs_dev
+          if [ -d ".git" ]; then
+            git fetch origin
+            git checkout dev
+            git pull origin dev
+          else
+            git clone -b dev git@github.com:farzot/Favs.git .
+          fi
+          npm install
+          npm run build
+          echo "${{ secrets.ENV_FILE_DEV }}" > /root/projects/favs_dev/.env
+          pm2 reload favs_dev || pm2 start dist/main.js --name "favs_dev"
+          pm2 save

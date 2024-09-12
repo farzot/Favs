@@ -1,7 +1,7 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { BaseEntity } from '../../common/database/BaseEntity';
-import { UserEntity } from './user.entity';
-import { BusinessEntity } from './business.entity';
+import { Entity, Column, ManyToOne, JoinColumn } from "typeorm";
+import { BaseEntity } from "../../common/database/BaseEntity";
+import { BusinessEntity } from "./business.entity";
+import { ExecuterEntity } from "./executer.entity";
 @Entity("reservations")
 export class ReservationEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
@@ -23,7 +23,7 @@ export class ReservationEntity extends BaseEntity {
 	@JoinColumn({ name: "business_id" })
 	public business!: BusinessEntity;
 
-	@ManyToOne(() => UserEntity, (user) => user.reservations, { onDelete: "CASCADE" })
+	@ManyToOne(() => ExecuterEntity, (user) => user.reservations, { onDelete: "CASCADE" })
 	@JoinColumn({ name: "user_id" })
-	public user!: UserEntity;
+	public user!: ExecuterEntity;
 }

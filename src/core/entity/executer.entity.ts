@@ -1,6 +1,6 @@
 import { BaseEntity } from "src/common/database/BaseEntity";
 import { Gender, Roles } from "src/common/database/Enums";
-import { Column, Entity, Index, ManyToMany, OneToMany } from "typeorm";
+import { Column, Entity, Index, JoinColumn, ManyToMany, ManyToOne, OneToMany } from "typeorm";
 import { BasketEntity } from "./basket.entity";
 import { UserLocationEntity } from "./user-location.entity";
 import { OrderEntity } from "./order.entity";
@@ -13,16 +13,18 @@ import { NotificationEntity } from "./notification.entity";
 import { CollectionsEntity } from "./collections.entity";
 import { MessageEntity } from "./message.entity";
 import { ChatEntity } from "./chat.entity";
+import { BusinessEntity } from "./business.entity";
+import { FileEntity } from "./file.entity";
 
-@Entity("users")
-export class UserEntity extends BaseEntity {
+@Entity("executers")
+export class ExecuterEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public first_name!: string;
 
 	@Column({ type: "varchar", nullable: true })
 	public last_name!: string;
 
-	@Column({ type: "varchar", nullable: true })
+	@Column({ type: "varchar", nullable: true, unique: true })
 	public username!: string;
 
 	@Column({ type: "varchar" })
@@ -44,7 +46,7 @@ export class UserEntity extends BaseEntity {
 	public home_town!: string;
 
 	@Column({ type: "varchar", nullable: true })
-	public birth_date!: string;
+	public birth_date!: number;
 
 	@Column({ type: "varchar", nullable: true })
 	public blog_or_website!: string;
@@ -58,11 +60,17 @@ export class UserEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public primary_language!: string;
 
-	@Column({ type: "varchar", default: Roles.USER })
+	@Column({ type: "varchar", name: "role", default: Roles.USER })
 	public role!: Roles;
 
 	@Column({ type: "varchar", nullable: true })
 	public hashed_token!: string;
+
+	@Column({ type: "int", nullable: true })
+	public google_id!: string;
+
+	@Column({ type: "boolean", nullable: true, default: false })
+	public is_profile_private!: boolean;
 
 	@Column({ type: "varchar", nullable: true })
 	public otp!: string;
@@ -79,11 +87,30 @@ export class UserEntity extends BaseEntity {
 	@Column({ type: "int", nullable: true, default: 0 })
 	public otp_blocked_duration!: number;
 
-	@Column({ nullable: true })
-	public google_id!: string;
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "created_by" })
+	created_by!: ExecuterEntity;
 
-	// @Column({ nullable: true })
-	// public google_access_token!: string;
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "updated_by" })
+	updated_by!: ExecuterEntity;
+
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "deleted_by" })
+	deleted_by!: ExecuterEntity;
+
+	@ManyToOne(() => FileEntity, (file) => file.executers, { onDelete: "CASCADE" })
+	@JoinColumn({ name: "image_id" })
+	image!: FileEntity;
+
+	@OneToMany(() => BusinessEntity, (business) => business.owner)
+	public business!: BusinessEntity[];
 
 	@OneToMany(() => BasketEntity, (basket) => basket.user)
 	public baskets!: BasketEntity[];

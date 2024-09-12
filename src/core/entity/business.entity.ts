@@ -1,9 +1,12 @@
-import { Entity, Column, OneToMany } from 'typeorm';
-import { BaseEntity } from '../../common/database/BaseEntity';
-import { BusinessReviewEntity } from './business_review.entity';
-import { ReservationEntity } from './reservation.entity';
-import { CollectionsEntity } from './collections.entity';
-import { BusinessPhotosEntity } from './business-photos.entity';
+import { Entity, Column, OneToMany, ManyToOne, JoinColumn, ManyToMany, JoinTable } from "typeorm";
+import { BaseEntity } from "../../common/database/BaseEntity";
+import { BusinessReviewEntity } from "./business_review.entity";
+import { ReservationEntity } from "./reservation.entity";
+import { CollectionsEntity } from "./collections.entity";
+import { BusinessPhotosEntity } from "./business-photos.entity";
+import { SmallCategoryEntity } from "./small-category.entity";
+import { ExecuterEntity } from "./executer.entity";
+import { ConsultationRequestEntity } from "./consultation.entity";
 @Entity("business")
 export class BusinessEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
@@ -22,7 +25,7 @@ export class BusinessEntity extends BaseEntity {
 	public stir_number!: string;
 
 	@Column({ type: "varchar", nullable: true })
-	public address_name!: string;
+	public street_adress!: string;
 
 	@Column({ type: "varchar", nullable: true })
 	public country!: string;
@@ -33,8 +36,11 @@ export class BusinessEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public state!: string;
 
+	// @Column({ type: "varchar", nullable: true })
+	// public street!: string;
+
 	@Column({ type: "varchar", nullable: true })
-	public street!: string;
+	public zip_code!: string;
 
 	@Column({ type: "varchar", nullable: true })
 	public latitude!: string;
@@ -42,14 +48,44 @@ export class BusinessEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public longitude!: string;
 
-	@Column({ type: "varchar", nullable: true })
-	public owner_id!: string;
+	@Column({ type: "boolean", nullable: true, default: false })
+	public is_claimed!: boolean;
 
-	@Column({ type: "varchar", nullable: true })
-	public category_id!: string;
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "created_by" })
+	created_by!: ExecuterEntity;
+
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "updated_by" })
+	updated_by!: ExecuterEntity;
+
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "deleted_by" })
+	deleted_by!: ExecuterEntity;
+
+	@ManyToOne(() => ExecuterEntity, (owner) => owner.business, { onDelete: "CASCADE" })
+	@JoinColumn({ name: "owner_id" })
+	public owner!: ExecuterEntity;
+
+	@ManyToMany(() => SmallCategoryEntity, (category) => category.businesses)
+	@JoinTable({
+		name: "business_categories", // Ko'prik jadval nomi
+		joinColumn: { name: "business_id", referencedColumnName: "id" },
+		inverseJoinColumn: { name: "category_id", referencedColumnName: "id" },
+	})
+	public categories!: SmallCategoryEntity[];
 
 	@OneToMany(() => BusinessReviewEntity, (review) => review.business)
 	public reviews!: BusinessReviewEntity[];
+
+	@OneToMany(() => ConsultationRequestEntity, (consultation) => consultation.business)
+	public consultations!: ConsultationRequestEntity[];
 
 	@OneToMany(() => ReservationEntity, (reservation) => reservation.business)
 	public reservations!: ReservationEntity[];

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsNumberString, IsString } from "class-validator";
 
 export class CreateBusinessReviewDto {
 	@IsNotEmpty()
@@ -6,12 +6,9 @@ export class CreateBusinessReviewDto {
 	public text!: string;
 
 	@IsNotEmpty()
-	@IsNumber()
+	@IsNumberString()
 	public rating!: number;
 
 	@IsNotEmpty()
 	public business!: string;
-
-	@IsNotEmpty()
-	public user!: string;
 }

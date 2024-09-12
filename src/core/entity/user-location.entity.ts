@@ -1,9 +1,9 @@
-import { BaseEntity } from "src/common/database/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
-import { UserEntity } from "./user.entity";
 import { OrderEntity } from "./order.entity";
+import { BaseEntity } from "../../common/database/BaseEntity";
+import { ExecuterEntity } from "./executer.entity";
 
-@Entity("user_locations")
+@Entity("user_location")
 export class UserLocationEntity extends BaseEntity {
 	@Column({ type: "varchar", length: 20, nullable: true })
 	public name_of_address!: string;
@@ -32,9 +32,9 @@ export class UserLocationEntity extends BaseEntity {
 	@Column({ type: "varchar", length: 10, nullable: false })
 	public zip_code!: string;
 
-	@ManyToOne(() => UserEntity, (user) => user.locations)
+	@ManyToOne(() => ExecuterEntity, (user) => user.locations)
 	@JoinColumn({ name: "user_id" })
-	public user!: UserEntity;
+	public user!: ExecuterEntity;
 
 	@Column({ type: "boolean", default: true })
 	public is_main!: boolean;

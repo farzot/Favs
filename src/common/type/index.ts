@@ -13,8 +13,15 @@ export interface IResponse<T> {
 	message: string;
 }
 
+export interface RequestWithPayload extends Request {
+	user: AuthPayload;
+}
+
 export interface AuthPayload {
 	id: string;
 	role: Roles;
-	email: string
+	email: string;
+	business_id?: string;
+	// store_id?: string;
+	// avaliable_stores: any[];
 }

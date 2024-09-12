@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import { CreateFeedbackDto } from "./dto/create-feedback.dto";
-import { FeedbackEntity, UserEntity } from "../../core/entity";
+import { FeedbackEntity, ExecuterEntity } from "../../core/entity";
 import { BaseService } from "../../infrastructure/lib/baseService";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ProductService } from "../product/product.service";
@@ -31,7 +31,7 @@ export class FeedbackService extends BaseService<
 		super(feedbackRepo, "feedback");
 	}
 
-	async createFeedback(dto: CreateFeedbackDto, files: any, user: UserEntity, lang: string) {
+	async createFeedback(dto: CreateFeedbackDto, files: any, user: ExecuterEntity, lang: string) {
 		const new_feedback = new FeedbackEntity();
 		new_feedback.user = user;
 		const { data: check_product } = await this.productService.findOneById(dto.product, lang, {
@@ -58,7 +58,7 @@ export class FeedbackService extends BaseService<
 		id: string,
 		dto: UpdateFeedbackDto,
 		files: any,
-		user: UserEntity,
+		user: ExecuterEntity,
 		lang: string,
 	): Promise<IResponse<FeedbackEntity>> {
 		try {
@@ -103,7 +103,7 @@ export class FeedbackService extends BaseService<
 		}
 	}
 
-	async deleteFeedback(id: string, user: UserEntity, lang: string) {
+	async deleteFeedback(id: string, user: ExecuterEntity, lang: string) {
 		try {
 			const { data: feedback } = await this.findOneById(id, lang, {
 				relations: { product: true, user: true },

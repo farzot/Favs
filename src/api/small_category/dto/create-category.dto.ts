@@ -1,4 +1,6 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { Type } from "class-transformer";
+import { IsNotEmpty, IsString, ValidateNested } from "class-validator";
+import { ObjDto } from "../../../common/type";
 
 export class CreateSmallCategoryDto {
 	@IsNotEmpty()
@@ -24,4 +26,8 @@ export class CreateSmallCategoryDto {
 	@IsNotEmpty()
 	@IsString()
 	public description_ru!: string;
+
+	@ValidateNested({ each: true })
+	@Type(() => ObjDto)
+	public big_category!: ObjDto;
 }

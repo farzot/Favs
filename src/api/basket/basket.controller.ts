@@ -11,14 +11,14 @@ import {
 } from "@nestjs/common";
 import { Roles } from "src/common/database/Enums";
 import { CurrentLanguage } from "src/common/decorator/current-language";
-import { CurrentUser } from "src/common/decorator/current-user";
-import { UserEntity } from "src/core/entity";
+import { ExecuterEntity } from "src/core/entity";
 import { RolesGuard } from "../auth/roles/RoleGuard";
 import { RolesDecorator } from "../auth/roles/RolesDecorator";
 import { JwtAuthGuard } from "../auth/user/AuthGuard";
 import { BasketService } from "./basket.service";
 import { CreateBasketDto, CreateMultipleBasketDto } from "./dto/create-basket.dto";
 import { UpdateBasketDto } from "./dto/update-basket.dto";
+import { CurrentExecuter } from "../../common/decorator/current-user";
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller("basket")
@@ -30,7 +30,7 @@ export class BasketController {
 	public create(
 		@Body() dto: CreateBasketDto,
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 	) {
 		return this.basketService.createBasket(dto, lang, user);
 	}
@@ -40,7 +40,7 @@ export class BasketController {
 	public createMoreBasket(
 		@Body() dto: CreateMultipleBasketDto,
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 	) {
 		return this.basketService.createMultipleBasket(dto, lang, user);
 	}
@@ -56,7 +56,7 @@ export class BasketController {
 
 	@RolesDecorator(Roles.USER)
 	@Get("user-basket")
-	public findUserBaskets(@CurrentLanguage() lang: string, @CurrentUser() user: UserEntity) {
+	public findUserBaskets(@CurrentLanguage() lang: string, @CurrentExecuter() user: ExecuterEntity) {
 		return this.basketService.findUserBaskets(lang, user);
 	}
 
@@ -66,14 +66,14 @@ export class BasketController {
 		@Param("id") id: string,
 		@Body() dto: UpdateBasketDto,
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 	) {
 		return this.basketService.updateBasket(id, dto, lang, user);
 	}
 
 	@RolesDecorator(Roles.USER)
 	@Delete("remove-user-basket")
-	removeAllUserBasket(@CurrentLanguage() lang: string, @CurrentUser() user: UserEntity) {
+	removeAllUserBasket(@CurrentLanguage() lang: string, @CurrentExecuter() user: ExecuterEntity) {
 		return this.basketService.removeAllUserBasket(lang, user);
 	}
 }

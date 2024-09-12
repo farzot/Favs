@@ -4,7 +4,7 @@ import { UpdateUserCreditCardDto } from "./dto/update-user_credit_card.dto";
 import { BaseService } from "../../infrastructure/lib/baseService";
 import { InjectRepository } from "@nestjs/typeorm";
 import { FindOptionsWhereProperty, Repository } from "typeorm";
-import { UserCreditCardEntity, UserEntity } from "../../core/entity";
+import { UserCreditCardEntity, ExecuterEntity } from "../../core/entity";
 import { Forbidden, InvalidToken, UserNotFound } from "../auth/exception";
 import { UserService } from "../user/user.service";
 import { responseByLang } from "../../infrastructure/lib/prompts/successResponsePrompt";
@@ -27,7 +27,7 @@ export class UserCreditCardService extends BaseService<
 	) {
 		super(userCreditCardRepository, "UserCreditCard");
 	}
-	async createCard(dto: CreateUserCreditCardDto, user: UserEntity, lang: string) {
+	async createCard(dto: CreateUserCreditCardDto, user: ExecuterEntity, lang: string) {
 		try {
 			const new_credit_card = new UserCreditCardEntity();
 
@@ -53,7 +53,7 @@ export class UserCreditCardService extends BaseService<
 		}
 	}
 	async findAllCardByUser(
-		owner: UserEntity,
+		owner: ExecuterEntity,
 		lang: string,
 	): Promise<IResponse<UserCreditCardEntity[]>> {
 		try {
@@ -77,7 +77,7 @@ export class UserCreditCardService extends BaseService<
 			throw err;
 		}
 	}
-	async updateCard(id: string, dto: UpdateUserCreditCardDto, user: UserEntity, lang: string) {
+	async updateCard(id: string, dto: UpdateUserCreditCardDto, user: ExecuterEntity, lang: string) {
 		try {
 			const { data: card } = await this.findOneById(id, lang, {
 				relations: { user: true },
@@ -116,7 +116,7 @@ export class UserCreditCardService extends BaseService<
 			throw err;
 		}
 	}
-	async deleteCard(id: string, user: UserEntity, lang: string) {
+	async deleteCard(id: string, user: ExecuterEntity, lang: string) {
 		try {
 			const { data: card } = await this.findOneById(id, lang, {
 				relations: { user: true },

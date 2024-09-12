@@ -22,7 +22,7 @@ export class ContactUsController {
 		}
 		SendMsgFromBot(
 			config.BOT_TOKEN,
-			config.CHAT_ID,
+			config.CHAT_ID_CONTACT_US,
 			[
 				{ key: "Name", value: dto.name },
 				{ key: "Phone", value: dto.phone },

@@ -18,21 +18,35 @@ import { RolesGuard } from "../auth/roles/RoleGuard";
 import { RolesDecorator } from "../auth/roles/RolesDecorator";
 import { Roles } from "src/common/database/Enums";
 import { LoginDto } from "./dto/login.dto";
-import { CurrentUser } from "src/common/decorator/current-user";
-import { UserEntity } from "src/core/entity";
+import { ExecuterEntity } from "src/core/entity";
+import { CurrentExecuter } from "../../common/decorator/current-user";
+import { ICurrentExecuter } from "../../common/interface/current-executer.interface";
 
 @Controller("admin")
 export class AdminController {
 	constructor(private readonly adminService: AdminService) {}
 
-	// @UseGuards(JwtAuthGuard, RolesGuard)
-	// @RolesDecorator(Roles.SUPER_ADMIN)
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@RolesDecorator(Roles.SUPER_ADMIN)
 	@Post()
-	public create(@Body() dto: CreateAdminDto, @CurrentLanguage() lang: string) {
-		return this.adminService.createAdmin(dto, lang);
+	public create(
+		@Body() dto: CreateAdminDto,
+		@CurrentLanguage() lang: string,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
+	) {
+		return this.adminService.createAdmin(dto, lang, executerPayload.executer);
 	}
 
-	@Post("login")
+	@Post("/create-super-admin")
+	public createSuperAdmin(
+		@Body() dto: CreateAdminDto,
+		@CurrentLanguage() lang: string,
+		// @CurrentExecuter() executerPayload: ICurrentExecuter,
+	) {
+		return this.adminService.createSuperAdmin(dto,lang);
+	}
+
+	@Post("/login")
 	public login(@Body() dto: LoginDto, @CurrentLanguage() lang: string) {
 		return this.adminService.login(dto);
 	}
@@ -61,15 +75,19 @@ export class AdminController {
 		@Param("id") id: string,
 		@Body() dto: UpdateAdminDto,
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
-		return this.adminService.updateAdmin(id, dto, lang, user);
+		return this.adminService.updateAdmin(id, dto, lang, executerPayload.executer);
 	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.SUPER_ADMIN)
 	@Delete(":id")
-	public remove(@Param("id") id: string, @CurrentLanguage() lang: string) {
-		return this.adminService.delete(id, lang);
+	public remove(
+		@Param("id") id: string,
+		@CurrentLanguage() lang: string,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
+	) {
+		return this.adminService.delete(id, lang, executerPayload.executer);
 	}
 }

@@ -12,14 +12,14 @@ import {
 import { UserCreditCardService } from "./user_credit_card.service";
 import { CreateUserCreditCardDto } from "./dto/create-user_credit_card.dto";
 import { UpdateUserCreditCardDto } from "./dto/update-user_credit_card.dto";
-import { UserEntity } from "../../core/entity";
-import { CurrentUser } from "../../common/decorator/current-user";
 import { CurrentLanguage } from "../../common/decorator/current-language";
 import { RolesDecorator } from "../auth/roles/RolesDecorator";
 import { JwtAuthGuard } from "../auth/user/AuthGuard";
 import { RolesGuard } from "../auth/roles/RoleGuard";
 import { Roles } from "../../common/database/Enums";
 import { Forbidden } from "../auth/exception";
+import { CurrentExecuter } from "../../common/decorator/current-user";
+import { ExecuterEntity } from "../../core/entity";
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller("user-credit-card")
@@ -30,7 +30,7 @@ export class UserCreditCardController {
 	@Post()
 	async createUserCard(
 		@Body() dto: CreateUserCreditCardDto,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 		@CurrentLanguage() lang: string,
 	) {
 		return this.userCreditCardService.createCard(dto, user, lang);
@@ -50,7 +50,7 @@ export class UserCreditCardController {
 
 	@RolesDecorator(Roles.USER)
 	@Get("all-by-user")
-	findAllByUSer(@CurrentLanguage() lang: string, @CurrentUser() user: UserEntity) {
+	findAllByUSer(@CurrentLanguage() lang: string, @CurrentExecuter() user: ExecuterEntity) {
 		return this.userCreditCardService.findAllCardByUser(user, lang);
 	}
 
@@ -59,7 +59,7 @@ export class UserCreditCardController {
 	async findOne(
 		@Param("id") id: string,
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 	) {
 		const found_credit = await this.userCreditCardService.findOneById(id, lang, {
 			relations: { user: true },
@@ -77,7 +77,7 @@ export class UserCreditCardController {
 	update(
 		@Param("id") id: string,
 		@Body() dto: UpdateUserCreditCardDto,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 		@CurrentLanguage() lang: string,
 	) {
 		return this.userCreditCardService.updateCard(id, dto, user, lang);
@@ -88,7 +88,7 @@ export class UserCreditCardController {
 	remove(
 		@Param("id") id: string,
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 	) {
 		return this.userCreditCardService.deleteCard(id, user, lang);
 	}

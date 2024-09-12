@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { UserEntity, UserLocationEntity } from "src/core/entity";
+import { ExecuterEntity, UserLocationEntity } from "src/core/entity";
 import { UserLocationRepository } from "src/core/repository";
 import { BaseService } from "src/infrastructure/lib/baseService";
 import { CreateUserLocationDto } from "./dto/create-user-location.dto";
@@ -24,7 +24,7 @@ export class UserLocationService extends BaseService<
 	public async createUserLocation(
 		dto: CreateUserLocationDto,
 		lang: string,
-		user: UserEntity,
+		user: ExecuterEntity,
 	): Promise<IResponse<UserLocationEntity>> {
 				const location = await this.userLocationRepo.findOne({
 			where: { user, is_main: true, is_deleted: false },
@@ -43,7 +43,7 @@ export class UserLocationService extends BaseService<
 	public async addUserLocation(
 		dto: CreateUserLocationDto,
 		lang: string,
-		user: UserEntity,
+		user: ExecuterEntity,
 	): Promise<IResponse<UserLocationEntity>> {
 		const location = await this.userLocationRepo.findOne({
 			where: { user, is_deleted: false },
@@ -61,7 +61,7 @@ export class UserLocationService extends BaseService<
 		id: string,
 		dto: UpdateUserLocationDto,
 		lang: string,
-		user: UserEntity,
+		user: ExecuterEntity,
 	): Promise<IResponse<[]>> {
 		const location = await this.findOneById(id, lang, { where: { user, is_deleted: false } });
 

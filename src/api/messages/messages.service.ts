@@ -1,26 +1,62 @@
-import { Injectable } from '@nestjs/common';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
+import { Injectable } from "@nestjs/common";
+import { CreateMessageDto } from "./dto/create-message.dto";
+import { UpdateMessageDto } from "./dto/update-message.dto";
+import { MessageEntity } from "../../core/entity";
+import { BaseService } from "../../infrastructure/lib/baseService";
+import { InjectRepository } from "@nestjs/typeorm";
+import { MessageRepository } from "../../core/repository";
 
 @Injectable()
-export class MessagesService {
-  create(createMessageDto: CreateMessageDto) {
-    return 'This action adds a new message';
-  }
+export class MessagesService extends BaseService<
+	CreateMessageDto,
+	UpdateMessageDto,
+	MessageEntity
+> {
+	constructor(@InjectRepository(MessageEntity) repository: MessageRepository) {
+		super(repository, "Message");
+	}
 
-  findAll() {
-    return `This action returns all messages`;
-  }
+	// async saveMessage(senderId: string, receiverId: string, content: string): Promise<MessageEntity> {
+	// 	const message = this.getRepository.create({ senderId, receiverId, content });
+	// 	return this.getRepository.save(message);
+	// }
 
-  findOne(id: number) {
-    return `This action returns a #${id} message`;
-  }
+	// // Foydalanuvchilar o'rtasidagi xabarlarni olish
+	// async getMessages(senderId: string, receiverId: string): Promise<MessageEntity[]> {
+	// 	return this.getRepository.find({
+	// 		where: [
+	// 			{ senderId, receiverId },
+	// 			{ senderId: receiverId, receiverId: senderId },
+	// 		],
+	// 		order: { createdAt: "ASC" },
+	// 	});
+	// }
 
-  update(id: number, updateMessageDto: UpdateMessageDto) {
-    return `This action updates a #${id} message`;
-  }
+	async createMessage(
+		senderId: string,
+		receiverId: string,
+		content: string,
+	): Promise<MessageEntity> {
+		const message = this.getRepository.create({
+			sender: { id: senderId },
+			chat: { id: receiverId },
+			content,
+		});
+		return this.getRepository.save(message);
+	}
 
-  remove(id: number) {
-    return `This action removes a #${id} message`;
-  }
+	async getMessages(senderId: string, receiverId: string): Promise<MessageEntity[]> {
+		return this.getRepository.find({
+			where: [
+				{ sender: { id: senderId }, chat: { id: receiverId } },
+				{ sender: { id: receiverId }, chat: { id: senderId } },
+			],
+			order: { createdAt: "ASC" },
+			relations: ["sender", "chat"],
+		});
+	}
+
+	async deleteMessage(messageId: string): Promise<void> {
+		await this.getRepository.delete(messageId);
+	}
 }

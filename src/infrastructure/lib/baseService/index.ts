@@ -3,6 +3,7 @@ import { Repository } from "typeorm";
 import { IFindOptions, IResponse, IResponsePagination } from "./interface";
 import { RepositoryPager } from "../pagination";
 import { responseByLang, returnResponseMessage } from "../prompts/successResponsePrompt";
+import { ExecuterEntity } from "../../../core/entity/executer.entity";
 
 export class BaseService<CreateDto, UpdateDto, Entity> {
 	constructor(
@@ -14,8 +15,16 @@ export class BaseService<CreateDto, UpdateDto, Entity> {
 		return this.repository;
 	}
 
-	async create(dto: CreateDto, lang: string): Promise<IResponse<Entity>> {
-		let created_data = this.repository.create(dto) as unknown as Entity;
+	async create(
+		dto: CreateDto,
+		lang: string,
+		executer?: ExecuterEntity,
+	): Promise<IResponse<Entity>> {
+		let created_data = this.repository.create({
+			...dto,
+			created_at: Date.now(),
+			created_by: executer,
+		}) as unknown as Entity;
 		created_data = await this.repository.save(created_data);
 		const message = responseByLang("create", lang);
 		return {
@@ -54,7 +63,7 @@ export class BaseService<CreateDto, UpdateDto, Entity> {
 		if (!data) {
 			const error_data = {
 				message: [
-					`${this.entityName} Not found`,
+					`${this.entityName} not found`,
 					`${this.entityName} не найден`,
 					`${this.entityName} topilmadi`,
 				],
@@ -82,6 +91,8 @@ export class BaseService<CreateDto, UpdateDto, Entity> {
 		lang: string,
 		options?: IFindOptions<Entity>,
 	): Promise<IResponse<Entity>> {
+		console.log("FindOneById")
+		console.log("id",id)
 		const data = (await this.repository.findOne({
 			select: options?.select || {},
 			relations: options?.relations || [],
@@ -90,7 +101,7 @@ export class BaseService<CreateDto, UpdateDto, Entity> {
 		if (!data) {
 			const error_data = {
 				message: [
-					`${this.entityName} Not found`,
+					`${this.entityName} not found`,
 					`${this.entityName} не найден`,
 					`${this.entityName} topilmadi`,
 				],
@@ -113,9 +124,11 @@ export class BaseService<CreateDto, UpdateDto, Entity> {
 		};
 	}
 
-	async update(id: string, dto: UpdateDto, lang: string) {
+	async update(id: string, dto: UpdateDto, lang: string, executer?: ExecuterEntity) {
+		console.log("dto",dto)
 		await this.repository.update(id, {
 			...dto,
+			updated_by: executer,
 			updated_at: Date.now(),
 		});
 		const message = responseByLang("update", lang);
@@ -158,12 +171,13 @@ export class BaseService<CreateDto, UpdateDto, Entity> {
 		};
 	}
 
-	async delete(id: string, lang: string): Promise<IResponse<Entity>> {
+	async delete(id: string, lang: string, executer?: ExecuterEntity): Promise<IResponse<Entity>> {
 		const data = (await this.repository.update(
 			{ id },
 			{
 				is_deleted: true,
 				is_active: false,
+				deleted_by: executer,
 				deleted_at: Date.now(),
 			},
 		)) as unknown as Entity;

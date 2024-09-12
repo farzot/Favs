@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
-import { UserEntity } from "./user.entity";
 import { OrderEntity } from "./order.entity";
 import { BaseEntity } from "../../common/database/BaseEntity";
+import { ExecuterEntity } from "./executer.entity";
 
 @Entity("user_credit_card")
 export class UserCreditCardEntity extends BaseEntity {
@@ -20,9 +20,9 @@ export class UserCreditCardEntity extends BaseEntity {
 	@Column({ type: "boolean", nullable: true })
 	public is_visa!: boolean;
 
-	@ManyToOne(() => UserEntity, (user) => user.cards)
+	@ManyToOne(() => ExecuterEntity, (user) => user.cards)
 	@JoinColumn({ name: "user_id" })
-	public user!: UserEntity;
+	public user!: ExecuterEntity;
 
 	@OneToMany(() => OrderEntity, (order) => order.user_credit_card)
 	public orders!: OrderEntity[];

@@ -2,11 +2,10 @@ import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { OrderStatus, Roles } from "src/common/database/Enums";
 import {
-	AdminEntity,
 	OrderEntity,
 	OrderItemEntity,
 	UserCreditCardEntity,
-	UserEntity,
+	ExecuterEntity,
 	UserLocationEntity,
 } from "src/core/entity";
 import {
@@ -58,7 +57,7 @@ export class OrderService extends BaseService<CreateOrderDto, UpdateOrderDto, Or
 	}
 
 	/** create order */
-	// public async createOrder(dto: CreateOrderDto, user: UserEntity, lang: string) {
+	// public async createOrder(dto: CreateOrderDto, user: ExecuterEntity, lang: string) {
 	// 	try {
 	// 		const { data: products } = await this.productService.findAll(lang, {
 	// 			where: { id: In(dto.product.map((item) => item.id)), is_deleted: false },
@@ -183,7 +182,7 @@ export class OrderService extends BaseService<CreateOrderDto, UpdateOrderDto, Or
 	// 	}
 	// }
 
-	public async createOrder(dto: CreateOrderDto, user: UserEntity, lang: string) {
+	public async createOrder(dto: CreateOrderDto, user: ExecuterEntity, lang: string) {
 		try {
 			const { data: products } = await this.productService.findAll(lang, {
 				where: { id: In(dto.product.map((item) => item.id)), is_deleted: false },
@@ -342,12 +341,12 @@ ${productDetails}
 				.substring(0, 19)}
         `;
 			try {
-				SendMsgFromBot(
-					config.BOT_TOKEN,
-					config.CHAT_ID,
-					[{ key: "Yangi buyurtma", value: orderMessage }],
-					// "title",
-				);
+				// SendMsgFromBot(
+				// 	config.BOT_TOKEN,
+				// 	config.CHAT_ID,
+				// 	[{ key: "Yangi buyurtma", value: orderMessage }],
+				// 	// "title",
+				// );
 			} catch (error) {
 				console.log("ErRoR", error);
 
@@ -366,7 +365,7 @@ ${productDetails}
 		id: string,
 		dto: ChangeOrderStatusDto,
 		lang: string,
-		admin: AdminEntity,
+		admin: ExecuterEntity,
 	) {
 		// Buyurtmani topish
 		const order = await this.findOneBy(lang, {
@@ -400,7 +399,7 @@ ${productDetails}
 		}
 
 		// Buyurtma holatini yangilash
-		await this.orderRepo.update(id, { status: dto.status, admin });
+		await this.orderRepo.update(id, { status: dto.status});
 
 		const message = responseByLang("update", lang);
 		return { status_code: 200, data: [], message };
@@ -410,7 +409,7 @@ ${productDetails}
 	public async cancelOrder(
 		id: string,
 		lang: string,
-		admin: AdminEntity | UserEntity,
+		admin: ExecuterEntity,
 	): Promise<IResponse<[]>> {
 		const { data: order } = await this.findOneBy(lang, {
 			where: { id, status: OrderStatus.PENDING },
@@ -427,7 +426,7 @@ ${productDetails}
 
 		order.status = OrderStatus.CANCELLED;
 		if (admin.role == Roles.ADMIN || admin.role == Roles.SUPER_ADMIN)
-			order.admin = admin as unknown as AdminEntity;
+			// order.admin = admin as unknown as AdminEntity;
 		await this.getRepository.save(order);
 
 		const message = responseByLang("update", lang);
@@ -486,7 +485,7 @@ ${productDetails}
 	public async findUserSelfAllOrder(
 		query: FilterUserSelfOrderDto,
 		lang: string,
-		user: UserEntity,
+		user: ExecuterEntity,
 	): Promise<IResponse<OrderEntity[]>> {
 		let where = {};
 		if (query.status == "true") {
@@ -523,7 +522,7 @@ ${productDetails}
 	}
 
 	/** find one order for user */
-	public async findUserSelfOneOrder(id: string, lang: string, user: UserEntity) {
+	public async findUserSelfOneOrder(id: string, lang: string, user: ExecuterEntity) {
 		const order = await this.findOneById(id, lang, {
 			where: { user, is_deleted: false },
 			relations: {

@@ -7,8 +7,10 @@ export enum Roles {
 	SUPER_ADMIN = "super_admin",
 	ADMIN = "admin",
 	USER = "user",
-	// BUSINESS_OWNER = "business_owner",
-	// BUSINESS_MANAGER = "business_manager",
+	BUSINESS_OWNER = "business_owner",
+	BUSINESS_MANAGER = "business_manager",
+	// BUSINESS_STORE_ADMIN = "business_store_admin",
+	// BUSINESS_STORE_MANAGER = "business_store_manager",
 }
 
 export enum Gender {
@@ -25,6 +27,12 @@ export enum OrderStatus {
 	CANCELLED = "cancelled",
 }
 
+export enum ConsultationStatus {
+	PENDING = "pending",
+	REJECTED = "rejected",
+	ACCEPTED = "accepted",
+}
+
 export enum ProductType {
 	AUTHOR = "author",
 	IN_STOCK = "in_stock",
@@ -36,9 +44,11 @@ export enum PhotoType{
 	ALL= "all",
 	BANNER = "banner",
 	LOGO = "logo",
-	COVER = "cover",
-    THUMBNAIL = "thumbnail",
     MAIN = "main",
 }
 
-export { CategorySize };
+export enum BusinessRequest {
+	WAITING_FOR_APPROVAL = "pending",
+	ACCEPTED = "accepted",
+	REJECTED = "rejected",
+}

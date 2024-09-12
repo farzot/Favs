@@ -19,9 +19,8 @@ import { RolesDecorator } from "../auth/roles/RolesDecorator";
 import { Roles } from "src/common/database/Enums";
 import { RolesGuard } from "../auth/roles/RoleGuard";
 import { FilterDto } from "src/common/dto/filter.dto";
-import { CurrentUser } from "src/common/decorator/current-user";
-import { UserEntity } from "src/core/entity";
-import { ChangePasswordDto } from "./dto/change-password.dto";
+import { ExecuterEntity } from "src/core/entity";
+import { CurrentExecuter } from "../../common/decorator/current-user";
 
 @Controller("user")
 export class UserController {
@@ -38,8 +37,8 @@ export class UserController {
 	public findAll(@CurrentLanguage() lang: string, @Query() query: FilterDto) {
 		return this.userService.findAllWithPagination(lang, {
 			order: { id: "DESC" },
-			where: {is_deleted: false},
-			relations: {locations: true},
+			where: { is_deleted: false },
+			relations: { locations: true },
 			take: query.page_size,
 			skip: query.page,
 		});
@@ -48,7 +47,7 @@ export class UserController {
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.USER)
 	@Get("get-self-user-info")
-	public findSelfUserInfo(@CurrentLanguage() lang: string, @CurrentUser() user: UserEntity) {
+	public findSelfUserInfo(@CurrentLanguage() lang: string, @CurrentExecuter() user: ExecuterEntity) {
 		return this.userService.findOneBy(lang, {
 			where: { id: user.id },
 			relations: { locations: true },
@@ -67,7 +66,7 @@ export class UserController {
 	@Patch("update-self-user-info")
 	public updateUserSelfInfo(
 		@CurrentLanguage() lang: string,
-		@CurrentUser() user: UserEntity,
+		@CurrentExecuter() user: ExecuterEntity,
 		@Body() dto: UpdateUserDto,
 	) {
 		return this.userService.updateUserSelfInfo(dto, lang, user);
@@ -76,7 +75,7 @@ export class UserController {
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.USER)
 	@Delete("delete-user-self-account")
-	public removeSelfUser(@CurrentLanguage() lang: string, @CurrentUser() user: UserEntity) {
+	public removeSelfUser(@CurrentLanguage() lang: string, @CurrentExecuter() user: ExecuterEntity) {
 		return this.userService.delete(user.id, lang);
 	}
 
@@ -85,7 +84,7 @@ export class UserController {
 	// @Patch("change-password")
 	// public changPassword(
 	// 	@CurrentLanguage() lang: string,
-	// 	@CurrentUser() user: UserEntity,
+	// 	@CurrentUser() user: ExecuterEntity,
 	// 	@Body() dto: ChangePasswordDto,
 	// ) {
 	// 	return this.userService.changePassword(dto, user, lang);

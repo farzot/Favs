@@ -22,7 +22,12 @@ export type ConfigType = {
 	API_HOST: string;
 	RESET_TOKEN_EXPIRE_TIME: string;
 	BOT_TOKEN: string;
-	CHAT_ID:string
+	CHAT_ID_BUSINESS_REQUEST: string;
+	CHAT_ID_CONTACT_US: string;
+	ESKIZ_URL: string;
+	ESKIZ_EMAIL: string;
+	ESKIZ_PASSWORD: string;
+	OTP_CHAT_ID:string;
 };
 
 const requiredVariables = [
@@ -45,7 +50,12 @@ const requiredVariables = [
 	"API_HOST",
 	"RESET_TOKEN_EXPIRE_TIME",
 	"BOT_TOKEN",
-	"CHAT_ID",
+	"CHAT_ID_BUSINESS_REQUEST",
+	"CHAT_ID_CONTACT_US",
+	"ESKIZ_URL",
+	"ESKIZ_EMAIL",
+	"ESKIZ_PASSWORD",
+	"OTP_CHAT_ID",
 ];
 
 const missingVariables = requiredVariables.filter((variable) => {
@@ -80,5 +90,10 @@ export const config: ConfigType = {
 	API_HOST: process.env.API_HOST as string,
 	RESET_TOKEN_EXPIRE_TIME: process.env.RESET_TOKEN_EXPIRE_TIME as string,
 	BOT_TOKEN: process.env.BOT_TOKEN as string,
-    CHAT_ID: process.env.CHAT_ID as string,
+	CHAT_ID_BUSINESS_REQUEST: process.env.CHAT_ID_BUSINESS_REQUEST as string,
+	CHAT_ID_CONTACT_US: process.env.CHAT_ID_CONTACT_US as string,
+	ESKIZ_URL: process.env.ESKIZ_URL as string,
+    ESKIZ_EMAIL: process.env.ESKIZ_EMAIL as string,
+    ESKIZ_PASSWORD: process.env.ESKIZ_PASSWORD as string,
+	OTP_CHAT_ID: process.env.OTP_CHAT_ID as string,
 };

@@ -1,10 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, Column, ManyToOne, JoinColumn, PrimaryGeneratedColumn } from "typeorm";
+import { ExecuterEntity } from "../../core/entity/executer.entity";
 
 @Entity()
 export class BaseEntity {
-	// @PrimaryGeneratedColumn()
-	// id!: number;
-
 	@PrimaryGeneratedColumn("uuid")
 	id!: string;
 
@@ -26,6 +24,10 @@ export class BaseEntity {
 		name: "created_at",
 		type: "bigint",
 		default: () => "EXTRACT(epoch FROM NOW()) * 1000",
+		// transformer: {
+		// 	from: (value) => parseInt(value), // Parse string to number
+		// 	to: (value) => value, // No transformation needed when inserting/updating
+		// },
 	})
 	created_at!: number;
 
