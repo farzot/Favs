@@ -56,12 +56,26 @@ export class SmallCategoryController {
 		return this.categoryService.getAllCategories(query, lang);
 	}
 
-
 	/** get one category by id */
 	@Get(":id")
 	async getCategoryByID(@Param("id", ParseUUIDPipe) id: string, @CurrentLanguage() lang: string) {
 		let { data: category } = await this.categoryService.findOneById(id, lang, {
 			where: { is_deleted: false },
+			// relations: { big_category: true },
+		});
+		[category] = this.categoryService.filterCategoryByLang([category], lang);
+		const message = responseByLang("get_one", lang);
+		return { status_code: 200, data: category, message };
+	}
+
+	/** get one category by big_category id */
+	@Get("/by-big-category/:id")
+	async getByBigCategoryID(
+		@Param("id", ParseUUIDPipe) category_id: string,
+		@CurrentLanguage() lang: string,
+	) {
+		let { data: category } = await this.categoryService.findOneBy(lang, {
+			where: { is_deleted: false, big_category: { id: category_id } },
 			// relations: { big_category: true },
 		});
 		[category] = this.categoryService.filterCategoryByLang([category], lang);
@@ -76,7 +90,7 @@ export class SmallCategoryController {
 	async updateCategory(
 		@Param("id", ParseUUIDPipe) id: string,
 		@Body() dto: UpdateSmallCategoryDto,
-		@CurrentLanguage() lang: string = "ru",
+		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
 		await this.categoryService.findOneById(id, lang, {

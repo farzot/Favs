@@ -7,6 +7,7 @@ import { BusinessPhotosEntity } from "./business-photos.entity";
 import { SmallCategoryEntity } from "./small-category.entity";
 import { ExecuterEntity } from "./executer.entity";
 import { ConsultationRequestEntity } from "./consultation.entity";
+import { BusinessScheduleEntity } from "./business_schedule.entity";
 @Entity("business")
 export class BusinessEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
@@ -36,8 +37,8 @@ export class BusinessEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public state!: string;
 
-	// @Column({ type: "varchar", nullable: true })
-	// public street!: string;
+	@Column({ type: "varchar", nullable: true })
+	public extra_info!: string;
 
 	@Column({ type: "varchar", nullable: true })
 	public zip_code!: string;
@@ -50,6 +51,30 @@ export class BusinessEntity extends BaseEntity {
 
 	@Column({ type: "boolean", nullable: true, default: false })
 	public is_claimed!: boolean;
+
+	@Column({ type: "boolean", nullable: true, default: false })
+	public is_delivery_available!: boolean;
+
+	@Column({ type: "boolean", nullable: true, default: false })
+	public is_checkout_available!: boolean;
+
+	@Column({ type: "boolean", nullable: true, default: false })
+	public is_reservation_available!: boolean;
+
+	@Column({ type: "boolean", nullable: true, default: false })
+	public is_wifi_available!: boolean;
+
+	@Column({ type: "boolean", nullable: true, default: false })
+	public is_recommended!: boolean;
+
+	@Column({ type: "decimal", nullable: true, default: 0 })
+	public balance!: number;
+
+	@Column({ type: "decimal", nullable: true, default: 0 })
+	public average_star!: number;
+
+	@Column({ type: "decimal", nullable: true, default: 0 })
+	public reviews_count!: number;
 
 	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
 		onDelete: "CASCADE",
@@ -95,4 +120,7 @@ export class BusinessEntity extends BaseEntity {
 
 	@OneToMany(() => BusinessPhotosEntity, (photo) => photo.business)
 	public photos!: BusinessPhotosEntity[];
+
+	@OneToMany(() => BusinessScheduleEntity, (schedule) => schedule.business)
+	public schedules!: BusinessScheduleEntity[];
 }

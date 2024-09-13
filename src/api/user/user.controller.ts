@@ -21,8 +21,9 @@ import { RolesGuard } from "../auth/roles/RoleGuard";
 import { FilterDto } from "src/common/dto/filter.dto";
 import { ExecuterEntity } from "src/core/entity";
 import { CurrentExecuter } from "../../common/decorator/current-user";
+import { ICurrentExecuter } from "../../common/interface/current-executer.interface";
 
-@Controller("user")
+@Controller("/user")
 export class UserController {
 	constructor(private readonly userService: UserService) {}
 
@@ -46,10 +47,13 @@ export class UserController {
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.USER)
-	@Get("get-self-user-info")
-	public findSelfUserInfo(@CurrentLanguage() lang: string, @CurrentExecuter() user: ExecuterEntity) {
+	@Get("/get-self-user-info")
+	public findSelfUserInfo(
+		@CurrentLanguage() lang: string,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
+	) {
 		return this.userService.findOneBy(lang, {
-			where: { id: user.id },
+			where: { id: executerPayload.executer.id, is_deleted: false },
 			relations: { locations: true },
 		});
 	}
@@ -75,7 +79,10 @@ export class UserController {
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.USER)
 	@Delete("delete-user-self-account")
-	public removeSelfUser(@CurrentLanguage() lang: string, @CurrentExecuter() user: ExecuterEntity) {
+	public removeSelfUser(
+		@CurrentLanguage() lang: string,
+		@CurrentExecuter() user: ExecuterEntity,
+	) {
 		return this.userService.delete(user.id, lang);
 	}
 

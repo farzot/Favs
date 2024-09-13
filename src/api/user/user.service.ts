@@ -4,7 +4,7 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { BaseService } from "src/infrastructure/lib/baseService";
 import { ExecuterEntity } from "src/core/entity";
 import { InjectRepository } from "@nestjs/typeorm";
-import {  UserRepository } from "src/core/repository";
+import {  ExecuterRepository, UserRepository } from "src/core/repository";
 import { JwtToken } from "src/infrastructure/lib/jwt-token";
 import { responseByLang } from "src/infrastructure/lib/prompts/successResponsePrompt";
 import { BcryptEncryption } from "src/infrastructure/lib/bcrypt";
@@ -16,7 +16,7 @@ import { PasswordNotMatch, UsernameOrPasswordIncorrect } from "../auth/exception
 @Injectable()
 export class UserService extends BaseService<CreateUserDto, UpdateUserDto, ExecuterEntity> {
 	constructor(
-		@InjectRepository(ExecuterEntity) private readonly userRepo: UserRepository,
+		@InjectRepository(ExecuterEntity) private readonly userRepo: ExecuterRepository,
 		private readonly jwtToken: JwtToken,
 	) {
 		super(userRepo, "user");

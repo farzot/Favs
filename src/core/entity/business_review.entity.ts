@@ -5,12 +5,18 @@ import { ExecuterEntity } from "./executer.entity";
 import { MinLength } from "class-validator";
 @Entity("business_reviews")
 export class BusinessReviewEntity extends BaseEntity {
-	@Column({ type: "varchar"})
+	@Column({ type: "varchar" })
 	@MinLength(25)
 	public text!: string;
 
 	@Column({ type: "int" })
 	public rating!: number;
+
+	@Column({ type: "int", nullable: true, default: 0 })
+	public like!: number;
+
+	@Column({ type: "int", nullable: true, default: 0 })
+	public dislike!: number;
 
 	@Column({ type: "simple-array", nullable: true })
 	public images!: string[];

@@ -1,4 +1,4 @@
-import { Entity, JoinColumn, ManyToOne } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { BaseEntity } from "../../common/database/BaseEntity";
 import { BusinessEntity } from "./business.entity";
 import { ExecuterEntity } from "./executer.entity";
@@ -12,4 +12,10 @@ export class CollectionsEntity extends BaseEntity {
 	@ManyToOne(() => BusinessEntity, (business) => business.collections)
 	@JoinColumn({ name: "business_id" })
 	public business!: BusinessEntity;
+
+	@Column({ type: "varchar" })
+	public name!: string;
+
+	@Column({ type: "boolean", nullable: true, default: false })
+	public is_private!: boolean;
 }
