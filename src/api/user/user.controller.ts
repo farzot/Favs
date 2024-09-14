@@ -9,6 +9,7 @@ import {
 	UseGuards,
 	Query,
 	ParseIntPipe,
+	ParseUUIDPipe,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -22,8 +23,9 @@ import { FilterDto } from "src/common/dto/filter.dto";
 import { ExecuterEntity } from "src/core/entity";
 import { CurrentExecuter } from "../../common/decorator/current-user";
 import { ICurrentExecuter } from "../../common/interface/current-executer.interface";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 
-@Controller("/user")
+@Controller("/executers")
 export class UserController {
 	constructor(private readonly userService: UserService) {}
 
@@ -34,11 +36,24 @@ export class UserController {
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
-	@Get()
-	public findAll(@CurrentLanguage() lang: string, @Query() query: FilterDto) {
+	@Get("/all-users")
+	public findAllUsers(@CurrentLanguage() lang: string, @Query() query: FilterDto) {
 		return this.userService.findAllWithPagination(lang, {
 			order: { id: "DESC" },
-			where: { is_deleted: false },
+			where: { is_deleted: false, role: Roles.USER },
+			relations: { locations: true },
+			take: query.page_size,
+			skip: query.page,
+		});
+	}
+
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
+	@Get("/all-business-owners")
+	public findAllBusinessOwners(@CurrentLanguage() lang: string, @Query() query: FilterDto) {
+		return this.userService.findAllWithPagination(lang, {
+			order: { id: "DESC" },
+			where: { is_deleted: false, role: Roles.BUSINESS_OWNER },
 			relations: { locations: true },
 			take: query.page_size,
 			skip: query.page,
@@ -58,42 +73,48 @@ export class UserController {
 		});
 	}
 
-	// @UseGuards(JwtAuthGuard, RolesGuard)
-	// @RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
-	// @Get(":id")
-	// public findOne(@Param("id", ParseIntPipe) id: number, @CurrentLanguage() lang: string) {
-	// 	return this.userService.findOneById(id, lang);
-	// }
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
+	@Get(":id")
+	public findOne(@Param("id", ParseUUIDPipe) id: string, @CurrentLanguage() lang: string) {
+		return this.userService.findOneById(id, lang, { where: { is_deleted: false } });
+	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.USER)
-	@Patch("update-self-user-info")
+	@Patch("/update-self-user-info")
 	public updateUserSelfInfo(
 		@CurrentLanguage() lang: string,
-		@CurrentExecuter() user: ExecuterEntity,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
 		@Body() dto: UpdateUserDto,
 	) {
-		return this.userService.updateUserSelfInfo(dto, lang, user);
+		return this.userService.updateUserSelfInfo(dto, lang, executerPayload.executer);
 	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@RolesDecorator(Roles.USER)
-	@Delete("delete-user-self-account")
-	public removeSelfUser(
+	@Delete("/delete-user-self-account")
+	public async removeSelfUser(
 		@CurrentLanguage() lang: string,
-		@CurrentExecuter() user: ExecuterEntity,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
-		return this.userService.delete(user.id, lang);
+		return await this.userService.delete(executerPayload.executer.id, lang);
 	}
 
-	// @UseGuards(JwtAuthGuard, RolesGuard)
-	// @RolesDecorator(Roles.USER)
-	// @Patch("change-password")
-	// public changPassword(
-	// 	@CurrentLanguage() lang: string,
-	// 	@CurrentUser() user: ExecuterEntity,
-	// 	@Body() dto: ChangePasswordDto,
-	// ) {
-	// 	return this.userService.changePassword(dto, user, lang);
-	// }
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@RolesDecorator(
+		Roles.USER,
+		Roles.BUSINESS_MANAGER,
+		Roles.BUSINESS_OWNER,
+		Roles.ADMIN,
+		Roles.SUPER_ADMIN,
+	)
+	@Patch("/self-change-password")
+	public async changPassword(
+		@CurrentLanguage() lang: string,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
+		@Body() dto: ChangePasswordDto,
+	) {
+		return await this.userService.changePassword(dto, executerPayload.executer, lang);
+	}
 }

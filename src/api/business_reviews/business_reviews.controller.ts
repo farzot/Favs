@@ -54,56 +54,6 @@ export class BusinessReviewsController {
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Post()
 	@UseInterceptors(FileFieldsInterceptor([{ name: "images", maxCount: 4 }]))
-	// public async create(
-	// 	@Body() dto: CreateBusinessReviewDto,
-	// 	@UploadedFiles() files: { images?: Express.Multer.File[] }, // Fayl optional bo'ldi
-	// 	@CurrentLanguage() lang: string,
-	// 	@CurrentExecuter() executerPayload: ICurrentExecuter,
-	// ) {
-	// 	const new_review = new BusinessReviewEntity();
-
-	// 	// Fayllar bo'lmasa bo'sh ro'yxat yaratish
-	// 	let uploaded_files: string[] = [];
-	// 	if (files?.images && files.images.length > 0) {
-	// 		await Promise.all(
-	// 			files.images.map(async (image: any) => {
-	// 				const uploaded = await createFile(image);
-	// 				uploaded_files.push(uploaded);
-	// 			}),
-	// 		);
-	// 	}
-
-	// 	const { data: founded_business } = await this.businessService.findOneById(
-	// 		dto.business,
-	// 		lang,
-	// 		{
-	// 			where: { is_deleted: false },
-	// 		},
-	// 	);
-	// 	founded_business.reviews_count += 1;
-	// 	const { data: founded_user } = await this.userService.findOneById(
-	// 		executerPayload.executer.id,
-	// 		lang,
-	// 		{
-	// 			where: { is_deleted: false },
-	// 		},
-	// 	);
-
-	// 	new_review.images = uploaded_files;
-	// 	new_review.text = dto.text;
-	// 	new_review.rating = dto.rating;
-	// 	new_review.business = founded_business;
-	// 	new_review.user = founded_user;
-
-	// 	const data = await this.reviewRepo.save(new_review);
-	// 	await this.businessRepo.save(founded_business);
-	// 	const message = responseByLang("create", lang);
-	// 	return {
-	// 		status_code: 201,
-	// 		message,
-	// 		data,
-	// 	};
-	// }
 	public async create(
 		@Body() dto: CreateBusinessReviewDto,
 		@UploadedFiles() files: { images?: Express.Multer.File[] }, // Fayl optional bo'ldi
@@ -193,7 +143,7 @@ export class BusinessReviewsController {
 
 	// barcha reviewlarni ko'rish bu yerda username, business_id orqali filter qilsa bo'ladi
 	@Get()
-	async findAll(@CurrentLanguage() lang: string, @Query() query: ReviewFilterDto) {
+	public async findAll(@CurrentLanguage() lang: string, @Query() query: ReviewFilterDto) {
 		let where_condition: FindOptionsWhereProperty<BusinessReviewEntity> = { is_deleted: false };
 		if (query.username) {
 			where_condition = [
@@ -218,7 +168,7 @@ export class BusinessReviewsController {
 
 	// review id orqali reviewni get qilish
 	@Get(":id")
-	async findOne(@Param("id") id: string, @CurrentLanguage() lang: string) {
+	public async findOne(@Param("id") id: string, @CurrentLanguage() lang: string) {
 		return await this.businessReviewsService.findOneById(id, lang, {
 			where: { is_deleted: false },
 			relations: { user: true },
@@ -227,7 +177,7 @@ export class BusinessReviewsController {
 
 	// user id orqali reviewlarni get qilish
 	@Get(":user_id/by-user-id")
-	async findOneByUserID(@Param("id") user_id: string, @CurrentLanguage() lang: string) {
+	public async findOneByUserID(@Param("id") user_id: string, @CurrentLanguage() lang: string) {
 		return await this.businessReviewsService.findAllWithPagination(lang, {
 			where: { is_deleted: false, user: { id: user_id } },
 		});
@@ -236,7 +186,7 @@ export class BusinessReviewsController {
 	// user o'zi yozgan barcha reviewlarni ko'rish
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Get("/get-all-self-review")
-	async getAllSelfReviews(
+	public async getAllSelfReviews(
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
@@ -248,7 +198,7 @@ export class BusinessReviewsController {
 	// user o'zi yozgan review ni id orqali yangilash qilish
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Patch(":id")
-	async update(
+	public async update(
 		@Param("id") id: string,
 		@Body() dto: UpdateBusinessReviewDto,
 		@CurrentLanguage() lang: string,
@@ -282,16 +232,25 @@ export class BusinessReviewsController {
 
 	// Foydalanuvchi like bosganda
 	@Post(":id/like")
-	public async likeReview(@Param("id") id: string, @CurrentLanguage() lang: string) {
+	public async likeReview(
+		@Param("id") id: string,
+		@CurrentLanguage() lang: string,
+	): Promise<{
+		status_code: number;
+		data: { likes: number };
+		message: string;
+	}> {
 		const { data: review } = await this.businessReviewsService.findOneById(id, lang, {
 			where: { is_deleted: false },
 		});
+		console.log(review);
 		review.like += 1;
-		await this.reviewRepo.save(review);
+		const res_review = await this.reviewRepo.save(review);
+		console.log(res_review);
 		const message = responseByLang("create", lang);
 		return {
 			status_code: 201,
-			data: [],
+			data: { likes: review.like },
 			message,
 		};
 	}
@@ -307,60 +266,114 @@ export class BusinessReviewsController {
 		const message = responseByLang("create", lang);
 		return {
 			status_code: 201,
-			data: [],
+			data: [review.dislike],
 			message,
+		};
+	}
+
+	// user yozgan reviewlarning aynan qaysi categorylarga tegishli ekanligini soni bilan chiqarib berish
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@Get("/self-user-reviews-distribution")
+	public async getSelfReviewsByCategory(
+		@CurrentLanguage() lang: string,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
+	): Promise<{
+		status_code: number;
+		data: { category_name: string; review_count: number }[];
+		message: string;
+	}> {
+		const userId = executerPayload.executer.id;
+
+		// Kategoriyalar bo'yicha user sharhlarini olish
+		const userReviewsByCategory = await this.smallCategoryRepo
+			.createQueryBuilder("sc")
+			.select("sc.name_uz", "category_name")
+			.addSelect("COUNT(br.id)", "review_count")
+			.innerJoin("sc.businesses", "b")
+			.innerJoin("b.reviews", "br")
+			.innerJoin("br.user", "e")
+			.where("e.id = :userId", { userId })
+			.groupBy("sc.name_uz")
+			.orderBy("review_count", "DESC")
+			.getRawMany();
+
+		// Tilga mos xabarni olish
+		const message = responseByLang("get_one", lang);
+
+		// Natijalarni formatlash va qaytarish
+		return {
+			status_code: 200,
+			data: userReviewsByCategory.map((item) => ({
+				category_name: item.category_name,
+				review_count: parseInt(item.review_count, 10),
+			})),
+			message: message,
 		};
 	}
 
 	// userning self-reviewlardagi barchas yig'ilgan like va dislike lari
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Get("/user-self-review-like-dislike")
+	@Get("/self-user-review-like-dislike")
 	public async getSelfReviewLikeDislike(
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
-	): Promise<{ totalLikes: number; totalDislikes: number }> {
+	): Promise<{
+		status_code: number;
+		data: { total_likes: number; total_dislikes: number };
+		message: string;
+	}> {
+		// User ID ni executerPayload dan olamiz
 		const userId = executerPayload.executer.id;
+
+		// Til bo'yicha javobni olamiz
 		const message = responseByLang("get_one", lang);
+
+		// Like va Dislike summasini olamiz
 		const result = await this.reviewRepo
 			.createQueryBuilder("review")
-			.select("SUM(review.like)", "totalLikes")
-			.addSelect("SUM(review.dislike)", "totalDislikes")
+			.select("SUM(review.like)", "total_likes")
+			.addSelect("SUM(review.dislike)", "total_dislikes")
 			.where("review.user_id = :userId", { userId })
 			.andWhere("review.is_deleted = false")
 			.getRawOne();
 
+		// Ma'lumotlarni formatlash va qaytarish
 		return {
-			totalLikes: result.totalLikes || 0,
-			totalDislikes: result.totalDislikes || 0,
+			status_code: 200,
+			data: {
+				total_likes: result.total_likes || 0,
+				total_dislikes: result.total_dislikes || 0,
+			},
+			message: message,
 		};
 	}
 
 	// userning businesslarda birinchi bo'lib yozilgan review lar soni
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Get("/user-self-all-first-reviews")
+	@Get("/self-user-all-first-reviews")
 	public async getUserFirstBusinessReviews(
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	): Promise<unknown> {
+		console.log("Salom");
 		const userId = executerPayload.executer.id;
-		const message = responseByLang("get_one", lang);
-		const subQuery = this.reviewRepo
+		// Har bir biznes uchun foydalanuvchining birinchi sharhlarini sanash
+		const firstReviewCount = await this.reviewRepo
 			.createQueryBuilder("review")
-			.select("MIN(review.created_at)", "minCreatedAt")
-			.where("review.business_id = business.id")
-			.andWhere("review.user_id = :userId", { userId });
-
-		const data = this.reviewRepo
-			.createQueryBuilder("review")
+			.select("COUNT(DISTINCT review.business_id)", "firstReviewCount") // Har bir biznesga tegishli birinchi sharhlar sonini olish
 			.where("review.user_id = :userId", { userId })
-			.andWhere(`review.created_at = (${subQuery.getQuery()})`)
-			.getMany();
-		return { status_code: 200, data: data, message };
+			.getRawOne();
+		const message = responseByLang("get_one", lang);
+		return {
+			status_code: 200,
+			data: { first_review_count: parseInt(firstReviewCount.firstReviewCount, 10) },
+			message,
+		};
 	}
 
 	// u user yozgan reviewlar sonini olish
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Get("/user-self-review-count")
+	@Get("/self-user-review-count")
 	public async getUserSelfReviewCount(
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
@@ -374,28 +387,40 @@ export class BusinessReviewsController {
 				is_deleted: false,
 			},
 		});
-		return { status_code: 200, data: data, message };
+		return { status_code: 200, data: { review_count: data }, message };
 	}
 
 	// userning businesslarda birinchi bo'lib yozilgan reviewlardagi barcha yig'ilgan like va dislike lari by user_id
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Get("/get-user-review-like-dislike/:userId")
-	public async getUserewLikeDislike(
+	public async getUserReviewLikeDislike(
 		@CurrentLanguage() lang: string,
 		@Param("userId") userId: string, // userId params orqali qabul qilinadi
-	): Promise<{ totalLikes: number; totalDislikes: number }> {
+	): Promise<{
+		status_code: number;
+		data: { total_likes: number; total_dislikes: number };
+		message: string;
+	}> {
+		// Til bo'yicha javobni olamiz
 		const message = responseByLang("get_one", lang);
+
+		// Like va Dislike summasini olamiz
 		const result = await this.reviewRepo
 			.createQueryBuilder("review")
-			.select("SUM(review.like)", "totalLikes")
-			.addSelect("SUM(review.dislike)", "totalDislikes")
+			.select("SUM(review.like)", "total_likes")
+			.addSelect("SUM(review.dislike)", "total_dislikes")
 			.where("review.user_id = :userId", { userId })
 			.andWhere("review.is_deleted = false")
 			.getRawOne();
 
+		// Ma'lumotlarni formatlash va qaytarish
 		return {
-			totalLikes: result.totalLikes || 0,
-			totalDislikes: result.totalDislikes || 0,
+			status_code: 200,
+			data: {
+				total_likes: result.total_likes || 0,
+				total_dislikes: result.total_dislikes || 0,
+			},
+			message: message,
 		};
 	}
 
@@ -406,20 +431,18 @@ export class BusinessReviewsController {
 		@CurrentLanguage() lang: string,
 		@Param("userId") userId: string, // userId params orqali qabul qilinadi
 	): Promise<unknown> {
-		const message = responseByLang("get_one", lang);
-		const subQuery = this.reviewRepo
+		// Har bir biznes uchun foydalanuvchining birinchi sharhlarini sanash
+		const firstReviewCount = await this.reviewRepo
 			.createQueryBuilder("review")
-			.select("MIN(review.created_at)", "minCreatedAt")
-			.where("review.business_id = business.id")
-			.andWhere("review.user_id = :userId", { userId });
-
-		const data = await this.reviewRepo
-			.createQueryBuilder("review")
+			.select("COUNT(DISTINCT review.business_id)", "firstReviewCount") // Har bir biznesga tegishli birinchi sharhlar sonini olish
 			.where("review.user_id = :userId", { userId })
-			.andWhere(`review.created_at = (${subQuery.getQuery()})`)
-			.getMany();
-
-		return { status_code: 200, data: data, message };
+			.getRawOne();
+		const message = responseByLang("get_one", lang);
+		return {
+			status_code: 200,
+			data: { first_review_count: parseInt(firstReviewCount.firstReviewCount, 10) },
+			message,
+		};
 	}
 
 	// user yozgan reviewlar sonini olish by user_id
@@ -430,40 +453,31 @@ export class BusinessReviewsController {
 		@Param("userId") userId: string, // userId params orqali qabul qilinadi
 	): Promise<unknown> {
 		const message = responseByLang("get_one", lang);
-
 		const data = await this.reviewRepo.count({
 			where: {
 				user: { id: userId },
 				is_deleted: false,
 			},
 		});
-		return { status_code: 200, data: data, message };
+		return {
+			status_code: 200,
+			data: { review_count: data },
+			message,
+		};
 	}
 
 	// user id orqali user yozgan reviewlarning aynan qaysi categorylarga tegishli ekanligini soni bilan chiqarib berish
-	// @UseGuards(JwtAuthGuard, RolesGuard)
-	@Get("/user-reviews-distribution/:userId")
-	async getUserReviewsByCategory(@Param("userId") userId: string) {
-		const userReviewsByCategory = await this.smallCategoryRepo
-			.createQueryBuilder("sc")
-			.select("sc.name_uz", "category_name")
-			.addSelect("COUNT(br.id)", "review_count")
-			.innerJoin("sc.businesses", "b")
-			.innerJoin("b.reviews", "br")
-			.innerJoin("br.user", "e")
-			.where("e.id = :userId", { userId })
-			.groupBy("sc.name_uz")
-			.orderBy("review_count", "DESC")
-			.getRawMany();
-
-		return userReviewsByCategory;
-	}
-
-	// user yozgan reviewlarning aynan qaysi categorylarga tegishli ekanligini soni bilan chiqarib berish
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Get("/self-reviews-distribution")
-	async getSelfReviewsByCategory(@CurrentExecuter() executerPayload: ICurrentExecuter) {
-		const userId = executerPayload.executer.id;
+	@Get("/user-reviews-distribution/:userId")
+	public async getUserReviewsByCategory(
+		@Param("userId") userId: string,
+		@CurrentLanguage() lang: string,
+	): Promise<{
+		status_code: number;
+		data: { category_name: string; review_count: number }[];
+		message: string;
+	}> {
+		// Kategoriyalar bo'yicha user sharhlarini olish
 		const userReviewsByCategory = await this.smallCategoryRepo
 			.createQueryBuilder("sc")
 			.select("sc.name_uz", "category_name")
@@ -475,6 +489,18 @@ export class BusinessReviewsController {
 			.groupBy("sc.name_uz")
 			.orderBy("review_count", "DESC")
 			.getRawMany();
-		return userReviewsByCategory;
+
+		// Tilga mos xabarni olish
+		const message = responseByLang("get_one", lang);
+
+		// Natijalarni formatlash va qaytarish
+		return {
+			status_code: 200,
+			data: userReviewsByCategory.map((item) => ({
+				category_name: item.category_name,
+				review_count: parseInt(item.review_count, 10),
+			})),
+			message: message,
+		};
 	}
 }

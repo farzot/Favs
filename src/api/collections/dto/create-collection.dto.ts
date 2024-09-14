@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsNotEmpty, IsString, ValidateNested } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
 import { ObjDto } from "../../../common/type";
 
 export class CreateCollectionDto {
@@ -11,4 +11,8 @@ export class CreateCollectionDto {
 	@IsNotEmpty()
 	@IsString()
 	public name!: string;
+
+	@IsOptional()
+	@IsBoolean()
+	public is_private!: boolean;
 }

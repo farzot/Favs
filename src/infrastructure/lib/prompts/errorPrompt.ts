@@ -2851,6 +2851,16 @@ export const ERROR_PROMPT_MAP = {
 				"Noto'g'ri holatga o'tish!",
 			],
 		},
+		already_exists_error:{
+			id: 10035,
+            status: "BADREQUEST",
+            code: "USER",
+            labels: [
+                "Already exists!",
+                "Уже существует!",
+                "Allaqachon mavjud!",
+            ],
+		},
 	},
 };
 

@@ -4,7 +4,7 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { BaseService } from "src/infrastructure/lib/baseService";
 import { ExecuterEntity } from "src/core/entity";
 import { InjectRepository } from "@nestjs/typeorm";
-import {  ExecuterRepository, UserRepository } from "src/core/repository";
+import { ExecuterRepository, UserRepository } from "src/core/repository";
 import { JwtToken } from "src/infrastructure/lib/jwt-token";
 import { responseByLang } from "src/infrastructure/lib/prompts/successResponsePrompt";
 import { BcryptEncryption } from "src/infrastructure/lib/bcrypt";
@@ -62,12 +62,12 @@ export class UserService extends BaseService<CreateUserDto, UpdateUserDto, Execu
 	}
 
 	/** update user password */
-	public async changePassword(dto: ChangePasswordDto, user: ExecuterEntity,lang:string) {
+	public async changePassword(dto: ChangePasswordDto, user: ExecuterEntity, lang: string) {
 		if (dto.new_password !== dto.confirm_password) {
 			throw new PasswordNotMatch();
 		}
 		const check = await this.getRepository.findOne({
-			where: { email: user.email, password: dto.old_password },
+			where: { email: user.email },
 		});
 		if (!check) {
 			throw new UsernameOrPasswordIncorrect();
@@ -76,7 +76,7 @@ export class UserService extends BaseService<CreateUserDto, UpdateUserDto, Execu
 		const message = responseByLang("update", lang);
 		return { status_code: 200, data: [], message };
 	}
-	
+
 	remove(id: number) {
 		return `This action removes a #${id} user`;
 	}

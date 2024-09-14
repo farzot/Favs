@@ -76,6 +76,12 @@ export class BusinessEntity extends BaseEntity {
 	@Column({ type: "decimal", nullable: true, default: 0 })
 	public reviews_count!: number;
 
+	@Column({ type: "simple-array", nullable: true })
+	public images_videos!: string[];
+	
+	@Column({ type: "simple-array", nullable: true })
+	public company_documents!: string[];
+
 	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
 		onDelete: "CASCADE",
 	})
