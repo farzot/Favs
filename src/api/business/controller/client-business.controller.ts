@@ -17,7 +17,7 @@ import { ICurrentExecuter } from "../../../common/interface/current-executer.int
 import { FilterDto } from "../../../common/dto/filter.dto";
 import { IResponse } from "../../../common/type";
 import { BusinessEntity } from "../../../core/entity";
-import { FindOptionsWhereProperty, ILike, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
+import { Between, FindOptionsWhereProperty, ILike, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import { responseByLang } from "../../../infrastructure/lib/prompts/successResponsePrompt";
 import { ClientBusinessService } from "../service/client-business.service";
 import { RolesGuard } from "../../auth/roles/RoleGuard";
@@ -27,6 +27,7 @@ import { CurrentExecuter } from "../../../common/decorator/current-user";
 import { CreateConsultationDto } from "../dto/create-consultation.dto";
 import { Roles } from "../../../common/database/Enums";
 import { RolesDecorator } from "../../auth/roles/RolesDecorator";
+import { LocationBusinessQueryDto } from "../dto/query-business-location.dto";
 
 @Controller("/client/business")
 export class ClientBusinessController {
@@ -68,12 +69,14 @@ export class ClientBusinessController {
 	// 	const message = responseByLang("get_all", lang);
 	// 	return { status_code: 200, data: businesses, message };
 	// }
+
+	// get all business with multiple filters
 	@Get("/all-with-multiple-filter")
 	public async findAllWithMultipleFilter(
 		@CurrentLanguage() lang: string,
 		@Query() query: BusinessQueryDto,
 	): Promise<IResponse<BusinessEntity[]>> {
-		let where_condition: FindOptionsWhereProperty<BusinessEntity> = {};
+		let where_condition: FindOptionsWhereProperty<BusinessEntity> = { is_deleted: false };
 
 		// Search bo'yicha filter
 		if (query?.search) {
@@ -161,6 +164,70 @@ export class ClientBusinessController {
 				// created_at: "DESC", // Birinchi created_at bo'yicha tartiblash
 				average_star: "DESC", // Keyin average_star bo'yicha
 				reviews_count: "DESC", // Oxirida reviews_count bo'yicha tartiblash
+			},
+		});
+
+		const message = responseByLang("get_all", lang);
+		return { status_code: 200, data: businesses, message };
+	}
+
+	// get all business with location filter
+	@Get("/all-with-location-filter")
+	public async findAllWithLocationFilter(
+		@CurrentLanguage() lang: string,
+		@Query() query: LocationBusinessQueryDto,
+	): Promise<IResponse<BusinessEntity[]>> {
+		let where_condition: FindOptionsWhereProperty<BusinessEntity> = { is_deleted: false };
+
+		// Mamlakat bo'yicha filter
+		// if (query?.country) {
+		// 	where_condition = {
+		// 		...where_condition,
+		// 		country: query.country,
+		// 	};
+		// }
+
+		// Shahar bo'yicha filter
+		if (query?.city) {
+			where_condition = {
+				...where_condition,
+				city: query.city,
+			};
+		}
+
+		// Davlat bo'yicha filter
+		if (query?.state) {
+			where_condition = {
+				...where_condition,
+				state: query.state,
+			};
+		}
+
+		// Koordinatalar bo'yicha filter (radius bo'yicha)
+		if (query?.latitude && query?.longitude && query?.radius) {
+			const radiusInKm = query.radius; // Radius kilometrda beriladi
+			const R = 6371; // Yer radiusi (km)
+
+			// Haversine formulasi orqali masofani hisoblash
+			where_condition = {
+				...where_condition,
+				latitude: Between(query.latitude - radiusInKm / R, query.latitude + radiusInKm / R),
+				longitude: Between(
+					query.longitude - radiusInKm / (R * Math.cos((query.latitude * Math.PI) / 180)),
+					query.longitude + radiusInKm / (R * Math.cos((query.latitude * Math.PI) / 180)),
+				),
+			};
+		}
+
+		// Bizneslarni olish
+		let { data: businesses } = await this.businessService.findAllWithPagination(lang, {
+			take: query.page_size,
+			skip: query.page,
+			where: where_condition,
+			relations: ["schedules"],
+			order: {
+				average_star: "DESC",
+				reviews_count: "DESC",
 			},
 		});
 

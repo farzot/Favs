@@ -177,7 +177,10 @@ export class BusinessReviewsController {
 
 	// user id orqali reviewlarni get qilish
 	@Get(":user_id/by-user-id")
-	public async findOneByUserID(@Param("id") user_id: string, @CurrentLanguage() lang: string) {
+	public async findOneByUserID(
+		@Param("user_id") user_id: string,
+		@CurrentLanguage() lang: string,
+	) {
 		return await this.businessReviewsService.findAllWithPagination(lang, {
 			where: { is_deleted: false, user: { id: user_id } },
 		});
@@ -185,11 +188,12 @@ export class BusinessReviewsController {
 
 	// user o'zi yozgan barcha reviewlarni ko'rish
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Get("/get-all-self-review")
+	@Get("/self/all-reviews")
 	public async getAllSelfReviews(
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
+		console.log("Nimdir");
 		return await this.businessReviewsService.findAllWithPagination(lang, {
 			where: { user: executerPayload.executer, is_deleted: false },
 		});
@@ -273,7 +277,7 @@ export class BusinessReviewsController {
 
 	// user yozgan reviewlarning aynan qaysi categorylarga tegishli ekanligini soni bilan chiqarib berish
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Get("/self-user-reviews-distribution")
+	@Get("/self/reviews-distribution")
 	public async getSelfReviewsByCategory(
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
@@ -313,7 +317,7 @@ export class BusinessReviewsController {
 
 	// userning self-reviewlardagi barchas yig'ilgan like va dislike lari
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Get("/self-user-review-like-dislike")
+	@Get("/self/review-like-dislike")
 	public async getSelfReviewLikeDislike(
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
@@ -350,7 +354,7 @@ export class BusinessReviewsController {
 
 	// userning businesslarda birinchi bo'lib yozilgan review lar soni
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Get("/self-user-all-first-reviews")
+	@Get("/self/all-first-reviews")
 	public async getUserFirstBusinessReviews(
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
@@ -373,7 +377,7 @@ export class BusinessReviewsController {
 
 	// u user yozgan reviewlar sonini olish
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Get("/self-user-review-count")
+	@Get("/self/reviews-count")
 	public async getUserSelfReviewCount(
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,

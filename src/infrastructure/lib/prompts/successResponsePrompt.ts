@@ -88,6 +88,14 @@ export const SUCCESS_RESPONSE_PROMPT_MAP: IResponseMap = {
             ru: "Код успешно проверен!",
             uz: "Kod tasdiqlandi!",
         },
+	},
+	success:{
+		id: 12,
+        messages: {
+            en: "Success!",
+            ru: "Успешно!",
+            uz: "Muvaffaqiyatli!",
+        },
 	}
 };
 

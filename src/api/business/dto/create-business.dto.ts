@@ -1,4 +1,4 @@
-import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsNotEmpty, IsNumberString, IsOptional, IsString, IsUUID } from "class-validator";
 import { CreateExecuterDto } from "./create-business-executer.dto";
 
 export class CreateBusinessDto extends CreateExecuterDto {
@@ -39,17 +39,22 @@ export class CreateBusinessDto extends CreateExecuterDto {
 	public zip_code!: string;
 
 	@IsNotEmpty()
-	@IsString()
-	public latitude!: string;
+	@IsNumberString()
+	public latitude!: number;
 
 	@IsNotEmpty()
-	@IsString()
-	public longitude!: string;
+	@IsNumberString()
+	public longitude!: number;
+
+	// @IsNotEmpty()
+	// @IsArray()
+	// @ArrayNotEmpty()
+	// @IsString({ each: true })
+	// public categories!: string[];
 
 	@IsNotEmpty()
 	@IsArray()
-	@ArrayNotEmpty()
-	@IsString({ each: true })
+	@IsUUID("4", { each: true })
 	public categories!: string[];
 
 	@IsOptional()

@@ -172,6 +172,7 @@ export class BaseService<CreateDto, UpdateDto, Entity> {
 	}
 
 	async delete(id: string, lang: string, executer?: ExecuterEntity): Promise<IResponse<Entity>> {
+		
 		const data = (await this.repository.update(
 			{ id },
 			{

@@ -18,8 +18,14 @@ export class FileEntity {
 	@Column({ name: "mime_type", type: "varchar" })
 	mime_type!: string;
 
-	@OneToMany(() => ExecuterEntity, (executer) => executer.image, { onDelete: "CASCADE" })
-	executers!: ExecuterEntity[];
+	@Column({ type: "boolean", default: false })
+	public is_primary!: boolean;
+
+	// @OneToMany(() => ExecuterEntity, (executer) => executer.image, { onDelete: "CASCADE" })
+	// executers!: ExecuterEntity[];
+
+	// @OneToMany(() => ProfilePictureEntity, (profilePicture) => profilePicture.file)
+	// public profile_pictures!: ProfilePictureEntity[];
 
 	@Column({
 		name: "is_active",

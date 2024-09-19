@@ -1,6 +1,6 @@
 import { BaseEntity } from "src/common/database/BaseEntity";
 import { Gender, Roles } from "src/common/database/Enums";
-import { Column, Entity, Index, JoinColumn, ManyToMany, ManyToOne, OneToMany } from "typeorm";
+import { Column, Entity, Index, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from "typeorm";
 import { BasketEntity } from "./basket.entity";
 import { UserLocationEntity } from "./user-location.entity";
 import { OrderEntity } from "./order.entity";
@@ -15,6 +15,8 @@ import { MessageEntity } from "./message.entity";
 import { ChatEntity } from "./chat.entity";
 import { BusinessEntity } from "./business.entity";
 import { FileEntity } from "./file.entity";
+import { FriendshipEntity } from "./friendship.entity";
+import { BlockEntity } from "./block-users.entity";
 
 @Entity("executers")
 export class ExecuterEntity extends BaseEntity {
@@ -33,7 +35,7 @@ export class ExecuterEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public password!: string;
 
-	@Column({ type: "varchar", nullable: true })
+	@Column({ type: "simple-array", nullable: true })
 	public profile_picture!: string;
 
 	@Column({ type: "varchar", nullable: true })
@@ -49,13 +51,13 @@ export class ExecuterEntity extends BaseEntity {
 	public birth_date!: number;
 
 	@Column({ type: "varchar", nullable: true })
-	public blog_or_website!: string;
+	public my_blog_or_website!: string;
 
 	@Column({ type: "varchar", nullable: true })
-	public second_favourite_website!: string;
+	public my_second_favourite_website!: string;
 
 	@Column({ type: "varchar", nullable: true })
-	public last_great_book_i_read!: string;
+	public my_favourite_book!: string;
 
 	@Column({ type: "varchar", nullable: true })
 	public primary_language!: string;
@@ -105,9 +107,8 @@ export class ExecuterEntity extends BaseEntity {
 	@JoinColumn({ name: "deleted_by" })
 	deleted_by!: ExecuterEntity;
 
-	@ManyToOne(() => FileEntity, (file) => file.executers, { onDelete: "CASCADE" })
-	@JoinColumn({ name: "image_id" })
-	image!: FileEntity;
+	// @Column({ type: "simple-array", nullable: true })
+	// public images!: string[];
 
 	@OneToMany(() => BusinessEntity, (business) => business.owner)
 	public business!: BusinessEntity[];
@@ -147,4 +148,16 @@ export class ExecuterEntity extends BaseEntity {
 
 	@ManyToMany(() => ChatEntity, (chat) => chat.participants)
 	public chats!: ChatEntity[];
+
+	@OneToMany(() => FriendshipEntity, (friendship) => friendship.requester)
+	public sentFriendRequests!: FriendshipEntity[];
+
+	@OneToMany(() => FriendshipEntity, (friendship) => friendship.addressee)
+	public receivedFriendRequests!: FriendshipEntity[];
+
+	@OneToMany(() => BlockEntity, (block) => block.blocker)
+	public sentBlocks!: BlockEntity[];
+
+	@OneToMany(() => BlockEntity, (block) => block.blocked)
+	public receivedBlocks!: BlockEntity[];
 }

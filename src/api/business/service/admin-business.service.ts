@@ -40,7 +40,6 @@ export class AdminBusinessService extends BaseService<
 		lang: string,
 		executer: ExecuterEntity,
 	): Promise<IResponse<BusinessEntity>> {
-		console.log("Service kirish");
 		const query = this.dataSource.createQueryRunner();
 		await query.connect();
 		await query.startTransaction();
@@ -56,11 +55,9 @@ export class AdminBusinessService extends BaseService<
 			newExecuter.role = Roles.BUSINESS_OWNER; // Rolni to'g'ri belgilang
 			// newExecuter.created_by = executer;
 			newExecuter.username = dto.username;
-			newExecuter.email = "1";
+			newExecuter.email = dto.executer_email;
 			newExecuter.password = await BcryptEncryption.encrypt(dto.password);
-			console.log("executerni save qilishdan oldin");
 			await query.manager.save("executers", newExecuter);
-			console.log("executerni save qilishdan keyin");
 
 			// Yangi biznes yaratish
 			const newBusiness = new BusinessEntity();
@@ -89,12 +86,10 @@ export class AdminBusinessService extends BaseService<
 			}
 			newBusiness.categories = categories; // categories faqat kerakli qismini olish
 
-			console.log("Business save qilishdan oldin");
 			// Yangi biznesni saqlash
 			await query.manager.save("business", newBusiness);
 
 			await query.commitTransaction();
-			console.log("Finish");
 			const message = responseByLang("create", lang);
 			return { status_code: 201, data: newBusiness, message };
 		} catch (error) {
@@ -124,6 +119,16 @@ export class AdminBusinessService extends BaseService<
 			where: where_condition,
 			relations: { owner: true },
 			order: { created_at: "DESC" },
+			select: {
+				owner: {
+					id: true,
+					first_name: true,
+					last_name: true,
+					email: true,
+					phone_number: true,
+					username: true,
+				},
+			},
 		});
 		const message = responseByLang("get_all", lang);
 		return { status_code: 200, data: businesses, message };

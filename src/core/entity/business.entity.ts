@@ -28,8 +28,8 @@ export class BusinessEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public street_adress!: string;
 
-	@Column({ type: "varchar", nullable: true })
-	public country!: string;
+	// @Column({ type: "varchar", nullable: true })
+	// public country!: string;
 
 	@Column({ type: "varchar", nullable: true })
 	public city!: string;
@@ -43,11 +43,11 @@ export class BusinessEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public zip_code!: string;
 
-	@Column({ type: "varchar", nullable: true })
-	public latitude!: string;
+	@Column({ type: "decimal", nullable: true })
+	public latitude!: number;
 
-	@Column({ type: "varchar", nullable: true })
-	public longitude!: string;
+	@Column({ type: "decimal", nullable: true })
+	public longitude!: number;
 
 	@Column({ type: "boolean", nullable: true, default: false })
 	public is_claimed!: boolean;
@@ -78,7 +78,7 @@ export class BusinessEntity extends BaseEntity {
 
 	@Column({ type: "simple-array", nullable: true })
 	public images_videos!: string[];
-	
+
 	@Column({ type: "simple-array", nullable: true })
 	public company_documents!: string[];
 

@@ -267,6 +267,8 @@ export class ClientBusinessService extends BaseService<
 
 		return { status_code: 200, data: consultations, message };
 	}
-
+	public filterByLocations(lang: string, executer: ExecuterEntity){
+		
+	}
 	
 }

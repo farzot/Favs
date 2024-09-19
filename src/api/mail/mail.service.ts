@@ -33,4 +33,17 @@ export class MailService {
 			},
 		});
 	}
+
+	async sendFavsInviteLink(search_email: string) {
+		const url = `${String(process.env.API_HOST)}:${Number(process.env.PORT)}`;
+		await this.mailerService.sendMail({
+			from: config.MAILDEV_USER,
+			to: search_email,
+			subject: "Link for web-site",
+			template: "./invite-link",
+			context: {
+				url,
+			},
+		});
+	}
 }

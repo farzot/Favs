@@ -1,5 +1,6 @@
 import { Type } from "class-transformer";
 import {
+	IsEmail,
 	IsEnum,
 	IsNotEmpty,
 	IsNumber,
@@ -12,43 +13,47 @@ import { IsPhoneNumber } from "src/common/decorator/is-phone-number";
 import { ObjDto } from "src/common/type";
 
 export class CreateExecuterDto {
-	@IsNotEmpty({ message: "first_name не должно быть пустым." })
-	@IsString({ message: "first_name должно быть строкой." })
+	@IsNotEmpty()
+	@IsString()
 	first_name!: string;
 
-	@IsNotEmpty({ message: "last_name не должно быть пустым." })
-	@IsString({ message: "last_name должно быть строкой." })
+	@IsNotEmpty()
+	@IsString()
 	last_name!: string;
 
-	@IsNotEmpty({ message: "gender не должен быть пустым." })
-	@IsEnum(Gender, { message: "Некорректное значение для gender." })
+	@IsNotEmpty()
+	@IsEnum(Gender)
 	gender!: Gender;
 
 	@IsOptional()
 	// @IsNumber({}, { message: "birth_date должен быть числом." })
 	birth_date!: number;
 
-	@IsNotEmpty({ message: "phone_number не должен быть пустым." })
-	@IsString({ message: "phone_number должно быть строкой." })
-	@IsPhoneNumber({ message: "Некорректный номер телефона для phone_number." })
+	@IsNotEmpty()
+	@IsString()
+	@IsPhoneNumber()
 	phone_number!: string;
 
 	@IsOptional()
-	@ValidateNested({ each: true, message: "Поле image должно быть валидным объектом." })
+	@ValidateNested({ each: true })
 	@Type(() => ObjDto)
 	image!: ObjDto;
 
-	@IsNotEmpty({ message: "username не должно быть пустым." })
-	@IsString({ message: "username должно быть строкой." })
+	@IsNotEmpty()
+	@IsString()
 	username!: string;
 
-	@IsNotEmpty({ message: "password не должно быть пустым." })
-	@IsString({ message: "password должно быть строкой." })
+	@IsNotEmpty()
+	@IsString()
 	password!: string;
+
+	@IsNotEmpty()
+    @IsEmail()
+    executer_email!: string;
 }
 
 export class CreateExecuterDtoWithRole extends CreateExecuterDto {
-	@IsNotEmpty({ message: "role не должен быть пустым." })
-	@IsEnum(Roles, { message: "Некорректное значение для role." })
+	@IsNotEmpty()
+	@IsEnum(Roles)
 	role!: Roles;
 }

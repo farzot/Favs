@@ -21,3 +21,4 @@ export { NotificationRepository } from "./notification.repository";
 export { ExecuterRepository } from "./executer.repository";
 export { SMSTokenRepository } from "./sms-token.repository";
 export { BusinessRepository } from "./business.repository";
+export { BlockRepository } from "./block-user.repository";

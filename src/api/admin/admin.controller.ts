@@ -22,7 +22,7 @@ import { ExecuterEntity } from "src/core/entity";
 import { CurrentExecuter } from "../../common/decorator/current-user";
 import { ICurrentExecuter } from "../../common/interface/current-executer.interface";
 
-@Controller("admin")
+@Controller("/admin")
 export class AdminController {
 	constructor(private readonly adminService: AdminService) {}
 

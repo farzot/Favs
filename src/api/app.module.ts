@@ -24,7 +24,7 @@ import { BusinessModule } from "./business/business.module";
 import { BigCategoryModule } from "./big_category/big_category.module";
 import { BusinessPhotosModule } from "./business_photos/business_photos.module";
 import { ReservationsModule } from "./reservations/reservations.module";
-import { FollowersModule } from "./followers/followers.module";
+import { FriendshipModule } from "./friendship/friendship.module";
 import { CollectionsModule } from "./collections/collections.module";
 import { MessagesModule } from "./messages/messages.module";
 import { NotificationsModule } from "./notifications/notifications.module";
@@ -32,6 +32,7 @@ import { BusinessReviewsModule } from "./business_reviews/business_reviews.modul
 import { ProductReviewsModule } from "./product_reviews/product_reviews.module";
 import { ChatGateway } from "../chat/chat.gateway";
 import { ChatModule } from "./chat/chat.module";
+import { BlockModule } from "./block/block.module";
 @Module({
 	providers: [ChatGateway],
 	imports: [
@@ -63,13 +64,14 @@ import { ChatModule } from "./chat/chat.module";
 		BigCategoryModule,
 		BusinessPhotosModule,
 		ReservationsModule,
-		FollowersModule,
 		CollectionsModule,
 		MessagesModule,
 		NotificationsModule,
 		BusinessReviewsModule,
 		ProductReviewsModule,
 		ChatModule,
+		FriendshipModule,
+		BlockModule
 	],
 })
 export class AppModule implements NestModule {
