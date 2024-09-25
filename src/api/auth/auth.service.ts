@@ -199,6 +199,11 @@ export class AuthService extends BaseService<CreateAuthDto, UpdateAuthDto, Execu
 			this.userRepo.save(user),
 			this.mailService.sendOTP(createAuthDto.email, otp),
 		]);
+		if (config.NODE_ENV == "dev") {
+			SendMsgFromBot(config.BOT_TOKEN, config.OTP_CHAT_ID, [
+				{ key: "Yangi otp EMAIL:", value: otp },
+			]);
+		}
 		console.log("OTP: ", otp);
 		console.log("register finished:", new Date());
 		const message = responseByLang("create", lang);

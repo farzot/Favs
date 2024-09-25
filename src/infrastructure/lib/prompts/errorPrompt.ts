@@ -2851,16 +2851,24 @@ export const ERROR_PROMPT_MAP = {
 				"Noto'g'ri holatga o'tish!",
 			],
 		},
-		already_exists_error:{
+		already_exists_error: {
 			id: 10035,
-            status: "BADREQUEST",
-            code: "USER",
-            labels: [
-                "Already exists!",
-                "Уже существует!",
-                "Allaqachon mavjud!",
-            ],
+			status: "BADREQUEST",
+			code: "USER",
+			labels: ["Already exists!", "Уже существует!", "Allaqachon mavjud!"],
 		},
+		business_not_found: {
+			id: 10036,
+			status: "NOT FOUND",
+			code: "USER",
+			labels: ["Business not found!", "Бизнес не найден!", "Biznes topilmadi!"],
+		},
+		some_photos_not_found:{
+			id: 10037,
+            status: "NOT FOUND",
+            code: "USER",
+            labels: ["Some photos not found!", "Некоторые фотографии не найдены!", "Ba'zi rasmlar topilmadi!"],
+		}
 	},
 };
 

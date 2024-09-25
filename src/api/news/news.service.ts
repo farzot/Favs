@@ -49,6 +49,7 @@ export class NewsService extends BaseService<CreateNewsDto, UpdateNewsDto, NewsE
 		const _news = await this.findAll(lang, {
 			relations: { files: true },
 			where: { is_deleted: false },
+			order: { created_at: "DESC" },
 		});
 
 		const news = this.filterNewsByLang(_news.data, lang);

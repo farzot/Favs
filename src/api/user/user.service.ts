@@ -83,10 +83,14 @@ export class UserService extends BaseService<CreateUserDto, UpdateUserDto, Execu
 		return { status_code: 200, data: [], message };
 	}
 
-	public async inviteToFavs(search_email: string, lang: string): Promise<IResponse<unknown>> {
+	public async inviteToFavs(
+		search_email: string,
+		executer: ExecuterEntity,
+		lang: string,
+	): Promise<IResponse<unknown>> {
 		try {
 			try {
-				await this.mailService.sendFavsInviteLink(search_email);
+				await this.mailService.sendFavsInviteLink(search_email, executer.email);
 			} catch (error) {
 				throw new NotSentMessage();
 			}

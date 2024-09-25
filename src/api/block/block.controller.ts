@@ -12,8 +12,8 @@ export class BlockController {
 
 	// Userni bloklash
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Post("/block/:blockedId")
-	async blockUser(
+	@Post("/:blockedId")
+	public async blockUser(
 		@Param("blockedId") blockedId: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 		@CurrentLanguage() lang: string,
@@ -23,8 +23,8 @@ export class BlockController {
 
 	// Userni blokdan chiqarish
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Delete("/unblock/:blockedId")
-	async unblockUser(
+	@Post("/unblock/:blockedId")
+	public async unblockUser(
 		@Param("blockedId") blockedId: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 		@CurrentLanguage() lang: string,
@@ -34,8 +34,8 @@ export class BlockController {
 
 	// Bloklangan foydalanuvchilar ro'yxatini olish
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@Get("/blocked")
-	async getBlockedUsers(
+	@Get("/blocked-users")
+	public async getBlockedUsers(
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 		@CurrentLanguage() lang: string,
 	) {

@@ -12,7 +12,7 @@ export class CreateBusinessDto extends CreateExecuterDto {
 
 	@IsNotEmpty()
 	@IsString()
-	public phone_number!: string;
+	public phone_number!: string;	
 
 	@IsNotEmpty()
 	@IsString()

@@ -1,20 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from "@nestjs/common";
-import { FaqService } from "./faq.service";
-import { CreateFaqDto } from "./dto/create-faq.dto";
-import { UpdateFaqDto } from "./dto/update-faq.dto";
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from "@nestjs/common";
+import { FaqService } from "../service/site-faq.service";
+import { CreateFaqDto } from "../dto/create-faq.dto";
+import { UpdateFaqDto } from "../dto/update-faq.dto";
 import { CurrentLanguage } from "src/common/decorator/current-language";
 import { responseByLang } from "src/infrastructure/lib/prompts/successResponsePrompt";
+import { JwtAuthGuard } from "../../auth/user/AuthGuard";
+import { RolesGuard } from "../../auth/roles/RoleGuard";
+import { Roles } from "../../../common/database/Enums";
+import { RolesDecorator } from "../../auth/roles/RolesDecorator";
 
-@Controller("faq")
+@Controller("/admin/faq")
 export class FaqController {
 	constructor(private readonly faqService: FaqService) {}
 
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@RolesDecorator(Roles.SUPER_ADMIN, Roles.ADMIN)
 	@Post()
 	create(@Body() createFaqDto: CreateFaqDto, @CurrentLanguage() lang: string) {
 		return this.faqService.create(createFaqDto, lang);
 	}
 
-	@Get()
+	@Get("/all")
 	async findAll(@CurrentLanguage() lang: string) {
 		let { data: faqs } = await this.faqService.findAll(lang, { where: { is_deleted: false } });
 		faqs = this.faqService.filterFaqByLang(faqs, lang);
@@ -32,6 +38,8 @@ export class FaqController {
 		return { status_code: 200, data: faq, message };
 	}
 
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@RolesDecorator(Roles.BUSINESS_OWNER, Roles.BUSINESS_MANAGER)
 	@Patch(":id")
 	async update(
 		@Param("id") id: string,
@@ -42,6 +50,8 @@ export class FaqController {
 		return this.faqService.update(id, updateFaqDto, lang);
 	}
 
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@RolesDecorator(Roles.BUSINESS_OWNER, Roles.BUSINESS_MANAGER)
 	@Delete(":id")
 	async remove(@Param("id") id: string, @CurrentLanguage() lang: string) {
 		await this.faqService.findOneById(id, lang, { where: { is_deleted: false } });

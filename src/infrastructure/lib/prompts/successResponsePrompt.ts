@@ -73,28 +73,36 @@ export const SUCCESS_RESPONSE_PROMPT_MAP: IResponseMap = {
 			uz: "Muvaffaqiyatli chiqildi!",
 		},
 	},
-	sms_sent_successfully:{
+	sms_sent_successfully: {
 		id: 10,
-        messages: {
-            en: "SMS sent successfully!",
-            ru: "SMS успешно отправлен!",
-            uz: "SMS muvaffaqiyatli yuborildi!",
-        },
+		messages: {
+			en: "SMS sent successfully!",
+			ru: "SMS успешно отправлен!",
+			uz: "SMS muvaffaqiyatli yuborildi!",
+		},
 	},
-	code_verified:{
+	code_verified: {
 		id: 11,
-        messages: {
-            en: "Code verified successfully!",
-            ru: "Код успешно проверен!",
-            uz: "Kod tasdiqlandi!",
-        },
+		messages: {
+			en: "Code verified successfully!",
+			ru: "Код успешно проверен!",
+			uz: "Kod tasdiqlandi!",
+		},
 	},
-	success:{
+	success: {
 		id: 12,
+		messages: {
+			en: "Success!",
+			ru: "Успешно!",
+			uz: "Muvaffaqiyatli!",
+		},
+	},
+	not_found:{
+		id: 13,
         messages: {
-            en: "Success!",
-            ru: "Успешно!",
-            uz: "Muvaffaqiyatli!",
+            en: "Not found!",
+            ru: "Не найдено!",
+            uz: "Topilmadi!",
         },
 	}
 };

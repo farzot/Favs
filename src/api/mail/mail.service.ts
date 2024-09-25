@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { MailerService } from "@nestjs-modules/mailer";
 import { ExecuterEntity } from "../../core/entity";
 import { config } from "../../config";
+import { ShareBusiness } from "../business/dto/share-business.dto";
 
 @Injectable()
 export class MailService {
@@ -34,7 +35,7 @@ export class MailService {
 		});
 	}
 
-	async sendFavsInviteLink(search_email: string) {
+	async sendFavsInviteLink(search_email: string, sender_email: string) {
 		const url = `${String(process.env.API_HOST)}:${Number(process.env.PORT)}`;
 		await this.mailerService.sendMail({
 			from: config.MAILDEV_USER,
@@ -43,6 +44,29 @@ export class MailService {
 			template: "./invite-link",
 			context: {
 				url,
+				sender_email
+			},
+		});
+	}
+
+	async sendBusinessInviteEmail(toEmail: string, data: ShareBusiness) {
+		await this.mailerService.sendMail({
+			from: config.MAILDEV_USER,
+			to: toEmail,
+			subject: `${data.sender} wants to tell you about ${data.business_name}`,
+			template: "./share-business.hbs", // Name of your .hbs file
+			context: {
+				sender: data.sender,
+				business_name: data.business_name,
+				business_link: data.business_link,
+				business_image: data.business_image,
+				message: data.message,
+				business_rating: data.business_rating,
+				business_reviews: data.business_reviews,
+				business_categories: data.business_categories,
+				recipient_email: data.recipient_email,
+				email_preferences_link: data.email_preferences_link,
+				sender_link: data.sender_link,
 			},
 		});
 	}

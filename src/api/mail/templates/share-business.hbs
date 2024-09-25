@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .button {
+        background-color: #d32323;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+      .content {
+        text-align: center;
+        font-family: Arial, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="content">
+      <img src="https://i.ibb.co/6bKTD9G/favs-logo.png" width="100" />
+      {{!-- <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Yelp_Logo.svg/1024px-Yelp_Logo.svg.png" width="100" /> --}}
+      <h2>{{sender}} wants to tell you about {{business_name}}</h2>
+      <a href="{{business_link}}" class="button">View This Business</a>
+      <img src="{{business_image}}" width="300" alt="{{business_name}}" />
+      <a href="{{sender_link}}">{{sender}} says, </a>
+      {{!-- <p><b>{{sender}}</b> says,</p> --}}
+      {{!-- <p><b>{{sender}}</b> says,</p> --}}
+      <blockquote>"{{message}}"</blockquote>
+      <p>{{business_name}}</p>
+      <p>{{business_rating}} stars - {{business_reviews}} reviews</p>
+      <p>{{business_categories}}</p>
+    </div>
+    
+    <footer>
+      <hr />
+      <p style="text-align:center; font-size:12px; color:#888;">
+        This email was sent to <a href="mailto:{{recipient_email}}" style="color:#0066cc;">{{recipient_email}}</a><br />
+        <a href="{{email_preferences_link}}" style="color:#0066cc;">Manage your email preferences</a><br />
+        © 2024 | Yelp Inc., 350 Mission Street, San Francisco, CA 94105, USA | 
+        <a href="https://www.yelp.com" style="color:#0066cc;">www.yelp.com</a>
+      </p>
+    </footer>
+  </body>
+</html>

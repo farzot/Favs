@@ -71,7 +71,7 @@ import { BlockModule } from "./block/block.module";
 		ProductReviewsModule,
 		ChatModule,
 		FriendshipModule,
-		BlockModule
+		BlockModule,
 	],
 })
 export class AppModule implements NestModule {

@@ -3,13 +3,13 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { FaqEntity } from "src/core/entity/faq.entity";
 import { FaqRepository } from "src/core/repository/faq.repository";
 import { BaseService } from "src/infrastructure/lib/baseService";
-import { CreateFaqDto } from "./dto/create-faq.dto";
-import { UpdateFaqDto } from "./dto/update-faq.dto";
+import { CreateFaqDto } from "../dto/create-faq.dto";
+import { UpdateFaqDto } from "../dto/update-faq.dto";
 
 @Injectable()
 export class FaqService extends BaseService<CreateFaqDto, UpdateFaqDto, FaqEntity> {
 	constructor(@InjectRepository(FaqEntity) repository: FaqRepository) {
-		super(repository, "Faq");
+		super(repository, "site_faq");
 	}
 	public filterFaqByLang(faqs: FaqEntity[], lang: string) {
 		return faqs.map((item) => {

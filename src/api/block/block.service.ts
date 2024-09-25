@@ -39,7 +39,7 @@ export class BlockService extends BaseService<CreateBlockDto,UpdateBlockDto,Bloc
 		return {
 			status_code: 201,
 			message,
-			data: created_data,
+			data: [],
 		};
 	}
 

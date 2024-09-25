@@ -9,6 +9,7 @@ import { AdminBusinessService } from "./service/admin-business.service";
 import { ClientBusinessService } from "./service/client-business.service";
 import { BigCategoryModule } from "../big_category/big_category.module";
 import { ConsultationRequestEntity } from "../../core/entity/consultation.entity";
+import { MailService } from "../mail/mail.service";
 
 @Module({
 	imports: [
@@ -17,7 +18,7 @@ import { ConsultationRequestEntity } from "../../core/entity/consultation.entity
 		forwardRef(() => BigCategoryModule),
 	],
 	controllers: [AdminBusinessController, ClientBusinessController],
-	providers: [AdminBusinessService, ClientBusinessService],
+	providers: [AdminBusinessService, ClientBusinessService,MailService],
 	exports: [AdminBusinessService, ClientBusinessService],
 })
 export class BusinessModule {}

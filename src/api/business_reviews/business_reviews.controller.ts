@@ -28,7 +28,7 @@ import {
 import { UserService } from "../user/user.service";
 import { responseByLang } from "../../infrastructure/lib/prompts/successResponsePrompt";
 import { FilterDto } from "../../common/dto/filter.dto";
-import { DataSource, FindOptionsWhereProperty } from "typeorm";
+import { Between, DataSource, FindOptionsWhereProperty } from "typeorm";
 import { ReviewFilterDto } from "./dto/review-filter.dto";
 import { CurrentExecuter } from "../../common/decorator/current-user";
 import { ICurrentExecuter } from "../../common/interface/current-executer.interface";
@@ -145,16 +145,29 @@ export class BusinessReviewsController {
 	@Get()
 	public async findAll(@CurrentLanguage() lang: string, @Query() query: ReviewFilterDto) {
 		let where_condition: FindOptionsWhereProperty<BusinessReviewEntity> = { is_deleted: false };
+
+		// Foydalanuvchi nomi bo'yicha filter
 		if (query.username) {
 			where_condition = [
 				{ user: { username: query.username, is_deleted: false }, is_deleted: false },
 			];
 		}
+
+		// Biznes ID bo'yicha filter
 		if (query.business_id) {
 			where_condition = [
 				{ business: { id: query.business_id, is_deleted: false }, is_deleted: false },
 			];
 		}
+
+		// Rating bo'yicha filter
+		if (query.min_rating || query.max_rating) {
+			where_condition = {
+				...where_condition,
+				rating: Between(query.min_rating || 0, query.max_rating || 5),
+			};
+		}
+
 		let { data: reviews } = await this.businessReviewsService.findAllWithPagination(lang, {
 			take: query.page_size,
 			skip: query.page,
@@ -162,9 +175,34 @@ export class BusinessReviewsController {
 			relations: { user: true },
 			order: { created_at: "DESC" },
 		});
+
 		const message = responseByLang("get_all", lang);
 		return { status_code: 200, data: reviews, message };
 	}
+
+	// @Get()
+	// public async findAll(@CurrentLanguage() lang: string, @Query() query: ReviewFilterDto) {
+	// 	let where_condition: FindOptionsWhereProperty<BusinessReviewEntity> = { is_deleted: false };
+	// 	if (query.username) {
+	// 		where_condition = [
+	// 			{ user: { username: query.username, is_deleted: false }, is_deleted: false },
+	// 		];
+	// 	}
+	// 	if (query.business_id) {
+	// 		where_condition = [
+	// 			{ business: { id: query.business_id, is_deleted: false }, is_deleted: false },
+	// 		];
+	// 	}
+	// 	let { data: reviews } = await this.businessReviewsService.findAllWithPagination(lang, {
+	// 		take: query.page_size,
+	// 		skip: query.page,
+	// 		where: where_condition,
+	// 		relations: { user: true },
+	// 		order: { created_at: "DESC" },
+	// 	});
+	// 	const message = responseByLang("get_all", lang);
+	// 	return { status_code: 200, data: reviews, message };
+	// }
 
 	// review id orqali reviewni get qilish
 	@Get(":id")

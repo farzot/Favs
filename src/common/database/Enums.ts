@@ -42,6 +42,7 @@ export enum PhotoType{
 	INSIDE = "inside",
 	OUTSIDE = "outside",
 	ALL= "all",
+	PRODUCTS= "products",
 	BANNER = "banner",
 	LOGO = "logo",
     MAIN = "main",

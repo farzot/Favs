@@ -135,7 +135,7 @@ export class UserController {
 	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@RolesDecorator(Roles.USER)
+	// @RolesDecorator(Roles.USER,Roles.ADMIN)
 	@Get("/get-self-user-info")
 	public findSelfUserInfo(
 		@CurrentLanguage() lang: string,
@@ -240,7 +240,8 @@ export class UserController {
 	public async inviteToFavs(
 		@Body("email") email: string,
 		@CurrentLanguage() lang: string,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	): Promise<IResponse<unknown>> {
-		return await this.userService.inviteToFavs(email, lang);
+		return await this.userService.inviteToFavs(email,executerPayload.executer,lang);
 	}
 }

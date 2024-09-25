@@ -9,7 +9,7 @@ import { CurrentLanguage } from "../../common/decorator/current-language";
 import { SendMsgFromBot } from "telegram-bot-sender";
 import { config } from "../../config";
 
-@Controller("contact-us")
+@Controller("/admin/contact-us")
 export class ContactUsController {
 	constructor(private readonly contactUsService: ContactUsService) {}
 

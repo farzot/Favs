@@ -8,6 +8,7 @@ import { SmallCategoryEntity } from "./small-category.entity";
 import { ExecuterEntity } from "./executer.entity";
 import { ConsultationRequestEntity } from "./consultation.entity";
 import { BusinessScheduleEntity } from "./business_schedule.entity";
+import { FaqBusinessEntity } from "./faq-business.entity";
 @Entity("business")
 export class BusinessEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
@@ -77,7 +78,7 @@ export class BusinessEntity extends BaseEntity {
 	public reviews_count!: number;
 
 	@Column({ type: "simple-array", nullable: true })
-	public images_videos!: string[];
+	public main_images!: string[];
 
 	@Column({ type: "simple-array", nullable: true })
 	public company_documents!: string[];
@@ -129,4 +130,7 @@ export class BusinessEntity extends BaseEntity {
 
 	@OneToMany(() => BusinessScheduleEntity, (schedule) => schedule.business)
 	public schedules!: BusinessScheduleEntity[];
+
+	@OneToMany(() => FaqBusinessEntity, (faq) => faq.business)
+	business_faqs!: FaqBusinessEntity[];
 }

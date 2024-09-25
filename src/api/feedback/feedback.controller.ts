@@ -23,8 +23,9 @@ import { ExecuterEntity } from "../../core/entity";
 import { UpdateFeedbackDto } from "./dto/update-feedback.dto";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { CurrentExecuter } from "../../common/decorator/current-user";
+import { ICurrentExecuter } from "../../common/interface/current-executer.interface";
 
-@Controller("feedback")
+@Controller("/feedback")
 export class FeedbackController {
 	constructor(private readonly feedbackService: FeedbackService) {}
 
@@ -36,10 +37,15 @@ export class FeedbackController {
 		@Body() createFeedbackDto: CreateFeedbackDto,
 		@UploadedFiles()
 		files: { images: Express.Multer.File[] },
-		@CurrentExecuter() user: ExecuterEntity,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
 		@CurrentLanguage() lang: string,
 	) {
-		return this.feedbackService.createFeedback(createFeedbackDto, files, user, lang);
+		return this.feedbackService.createFeedback(
+			createFeedbackDto,
+			files,
+			executerPayload.executer,
+			lang,
+		);
 	}
 
 	@Get()
@@ -70,10 +76,10 @@ export class FeedbackController {
 		@Body() dto: UpdateFeedbackDto,
 		@UploadedFiles()
 		files: { images: Express.Multer.File[] },
-		@CurrentExecuter() user: ExecuterEntity,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
 		@CurrentLanguage() lang: string,
 	) {
-		return this.feedbackService.updateFeedback(id, dto, files, user, lang);
+		return this.feedbackService.updateFeedback(id, dto, files, executerPayload.executer, lang);
 	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
@@ -82,9 +88,9 @@ export class FeedbackController {
 	async deleteFeedback(
 		@Param("id") id: string,
 		@CurrentLanguage() lang: string,
-		@CurrentExecuter() user: ExecuterEntity,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
-		return this.feedbackService.deleteFeedback(id, user, lang);
+		return this.feedbackService.deleteFeedback(id, executerPayload.executer, lang);
 	}
 
 	@Get(":id/rate")

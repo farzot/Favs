@@ -4,11 +4,12 @@ import { UpdateBusinessDto } from "../dto/update-business.dto";
 import { BaseService } from "../../../infrastructure/lib/baseService";
 import { InjectRepository } from "@nestjs/typeorm";
 import { BusinessEntity } from "../../../core/entity/business.entity";
-import { DataSource, FindOptionsWhereProperty, ILike, Repository } from "typeorm";
+import { DataSource, FindOptionsWhereProperty, ILike, In, Repository } from "typeorm";
 import { AddBusinessRequestDto } from "../dto/add-business-request.dto";
 import {
 	AddBusinessRequestEntity,
 	BigCategoryEntity,
+	BusinessPhotosEntity,
 	ExecuterEntity,
 	SmallCategoryEntity,
 } from "../../../core/entity";
@@ -16,7 +17,7 @@ import { SmallCategoryRepository } from "../../../core/repository";
 import { SmallCategoryService } from "../../small_category/small_category.service";
 import { IResponse } from "../../../common/type";
 import { responseByLang } from "../../../infrastructure/lib/prompts/successResponsePrompt";
-import { Roles } from "../../../common/database/Enums";
+import { PhotoType, Roles } from "../../../common/database/Enums";
 import { BcryptEncryption } from "../../../infrastructure/lib/bcrypt";
 import { SendMsgFromBot } from "telegram-bot-sender";
 import { config } from "../../../config";
@@ -24,6 +25,14 @@ import { BigCategoryService } from "../../big_category/big_category.service";
 import { FilterDto } from "../../../common/dto/filter.dto";
 import { ConsultationRequestEntity } from "../../../core/entity/consultation.entity";
 import { CreateConsultationDto } from "../dto/create-consultation.dto";
+import { AddBusinessPhotoDto } from "../dto/add-business-photo.dto";
+import { createFile } from "../../../infrastructure/lib/fileService";
+import { UpdateBusinessPhotoTypeDto } from "../dto/update-add-business-photo.dto";
+import { MailService } from "../../mail/mail.service";
+import { ShareBusiness, ShareBusinessDto } from "../dto/share-business.dto";
+import { BusinessNotFound } from "../exception/not-found";
+import { SomePhotosNotFound } from "../exception/photos-not-found.exception";
+import { UpdateBusinessPhotoTypesDto } from "../dto/update-business-photo-types.dto";
 
 @Injectable()
 export class ClientBusinessService extends BaseService<
@@ -40,6 +49,7 @@ export class ClientBusinessService extends BaseService<
 		private readonly dataSource: DataSource,
 		@Inject(forwardRef(() => BigCategoryService))
 		private bigCategoryService: BigCategoryService,
+		private readonly mailService: MailService,
 	) {
 		super(businessRepo, "business");
 	}
@@ -258,17 +268,354 @@ export class ClientBusinessService extends BaseService<
 		}
 	}
 
-	public async getAllConsultations(lang: string, executer: ExecuterEntity) {
+	public async getAllConsultations(lang: string, business_id: string) {
 		const consultations = await this.consultationRepo.findBy({
-			business: executer.business[0], // bitta biznes bo'lsa, array ishlatmasdan to'g'ridan-to'g'ri shu qiymatni qo'yamiz
+			business: { id: business_id }, // bitta biznes bo'lsa, array ishlatmasdan to'g'ridan-to'g'ri shu qiymatni qo'yamiz
 			is_deleted: false,
 		});
 		const message = responseByLang("get_all", lang);
-
 		return { status_code: 200, data: consultations, message };
 	}
-	public filterByLocations(lang: string, executer: ExecuterEntity){
-		
+
+	public addBusinessPhoto(
+		dto: AddBusinessPhotoDto,
+		files: any,
+		executer: ExecuterEntity,
+		lang: string,
+	) {
+		const query = this.dataSource.createQueryRunner();
+		return new Promise(async (resolve, reject) => {
+			try {
+				await query.connect();
+				await query.startTransaction();
+
+				// Business ni topish
+				const { data: business } = await this.findOneById(dto.business.id, lang, {
+					where: { is_deleted: false },
+				});
+
+				// Fayllar mavjud bo'lsa
+				if (files.images && files.images.length > 0) {
+					let savedPhotos: BusinessPhotosEntity[] = [];
+
+					// Har bir rasm uchun yangi BusinessPhoto yaratish
+					for (const image of files.images) {
+						const new_photo = new BusinessPhotosEntity();
+						new_photo.business = business;
+						new_photo.caption = dto.caption;
+
+						// Faylni yuklash va nomini olish
+						const uploaded_file_name = await createFile(image);
+
+						// Yaratilgan rasm fayli nomini yozish
+						new_photo.image_url = uploaded_file_name;
+						new_photo.created_at = Date.now();
+
+						// Har bir rasmni saqlash
+						const savedPhoto = await query.manager.save(
+							BusinessPhotosEntity,
+							new_photo,
+						);
+						savedPhoto.created_by = executer;
+						savedPhotos.push(savedPhoto);
+					}
+
+					// Tranzaktsiyani yakunlash
+					await query.commitTransaction();
+
+					resolve({
+						status_code: 201,
+						data: savedPhotos,
+						message: responseByLang("create", lang),
+					});
+				} else {
+					// Agar rasm yuklanmagan bo'lsa, xato qaytarish
+					throw new Error("No images provided");
+				}
+			} catch (error) {
+				await query.rollbackTransaction();
+				reject(error);
+			} finally {
+				await query.release();
+			}
+		});
 	}
-	
+
+	public async updateBusinessPhotoType(
+		dto: UpdateBusinessPhotoTypeDto,
+		business_id: string,
+		executer: ExecuterEntity,
+		lang: string,
+	) {
+		const query = this.dataSource.createQueryRunner();
+		return new Promise(async (resolve, reject) => {
+			try {
+				await query.connect();
+				await query.startTransaction();
+
+				// Find the existing photo
+				const existing_photo = await query.manager.findOne(BusinessPhotosEntity, {
+					where: { id: dto.photo_id, is_deleted: false, business: { id: business_id } },
+				});
+
+				if (!existing_photo) {
+					throw new Error(responseByLang("not_found", lang));
+				}
+
+				// Update photo_type
+				existing_photo.photo_type = dto.photo_type;
+				existing_photo.updated_at = Date.now();
+				existing_photo.updated_by = executer;
+
+				const updatedPhoto = await query.manager.save(BusinessPhotosEntity, existing_photo);
+
+				await query.commitTransaction();
+
+				resolve({
+					status_code: 200,
+					data: [],
+					message: responseByLang("update", lang),
+				});
+			} catch (error) {
+				await query.rollbackTransaction();
+				reject(error);
+			} finally {
+				await query.release();
+			}
+		});
+	}
+
+	public async updateBusinessPhotoTypes(
+		dto: UpdateBusinessPhotoTypesDto,
+		business_id: string,
+		executer: ExecuterEntity,
+		lang: string,
+	) {
+		const query = this.dataSource.createQueryRunner();
+		return new Promise(async (resolve, reject) => {
+			try {
+				await query.connect();
+				await query.startTransaction();
+
+				// Kiritilgan fotosuratlarni topish
+				const existing_photos = await query.manager.find(BusinessPhotosEntity, {
+					where: {
+						id: In(dto.photo_ids),
+						is_deleted: false,
+						business: { id: business_id },
+					},
+				});
+
+				const existingPhotoIds = existing_photos.map((photo) => photo.id);
+
+				// Kiritilgan barcha photo_ids database'da mavjudligini tekshirish
+				const missingPhotos = dto.photo_ids.filter((id) => !existingPhotoIds.includes(id));
+
+				if (missingPhotos.length > 0) {
+					throw new SomePhotosNotFound();
+				}
+
+				// Har bir fotosurat turini yangilash
+				existing_photos.forEach((photo) => {
+					photo.photo_type = dto.photo_type;
+					photo.updated_at = Date.now();
+					photo.updated_by = executer;
+				});
+
+				await query.manager.save(BusinessPhotosEntity, existing_photos);
+
+				await query.commitTransaction();
+
+				resolve({
+					status_code: 200,
+					data: [],
+					message: responseByLang("update", lang),
+				});
+			} catch (error) {
+				await query.rollbackTransaction();
+				reject(error);
+			} finally {
+				await query.release();
+			}
+		});
+	}
+
+	public async getAllBusinessPhotosByType(
+		business_id: string,
+		photo_type: PhotoType | null, // PhotoType null bo'lishi mumkinligini ko'rsatish
+		lang: string,
+	) {
+		const query = this.dataSource.createQueryRunner();
+		return new Promise(async (resolve, reject) => {
+			try {
+				await query.connect();
+				let photos: BusinessPhotosEntity[] = [];
+				console.log(photo_type);
+				// photo_type aniq bo'lsa, faqat o'sha turdagi photolarni qidiradi
+				if (photo_type) {
+					photos = await query.manager.find(BusinessPhotosEntity, {
+						where: {
+							business: { id: business_id },
+							photo_type: photo_type,
+							is_deleted: false,
+						},
+						order: {
+							created_at: "DESC", // Tartibni sozlash mumkin
+						},
+					});
+					console.log("photos_1", photos);
+				} else {
+					// Aks holda barcha photolarni qaytaradi
+					photos = await query.manager.find(BusinessPhotosEntity, {
+						where: {
+							business: { id: business_id },
+							is_deleted: false,
+						},
+						order: {
+							created_at: "DESC", // Tartibni sozlash mumkin
+						},
+					});
+					console.log("photos_2", photos);
+				}
+
+				// Agar hech qanday photo topilmasa, bo'sh array qaytarish
+				if (!photos.length) {
+					photos = [];
+					console.log("photos_3", photos);
+				}
+				resolve({
+					status_code: 200,
+					data: photos,
+					message: responseByLang("get_all", lang),
+				});
+			} catch (error) {
+				reject(error);
+			} finally {
+				await query.release();
+			}
+		});
+	}
+
+	// public async shareBusinessByEmail(
+	// 	dto: ShareBusinessDto,
+	// 	executer: ExecuterEntity,
+	// 	lang: string,
+	// ) {
+	// 	const { data: business } = await this.findOneById(dto.business_id, lang, {
+	// 		where: { is_deleted: false },
+	// 		relations: { photos: true },
+	// 	});
+	// 	console.log("Najim_1")
+	// 	const business_categories = business.categories.map((cat) => cat.name_en).join(", ");
+	// 	console.log("Najim_2");
+	// 	const inviteData = new ShareBusiness();
+	// 	inviteData.sender = executer.first_name;
+	// 	inviteData.business_image = business.main_images[0];
+	// 	inviteData.business_name = business.name;
+	// 	inviteData.message = dto.message;
+	// 	inviteData.business_rating = business.average_star;
+	// 	inviteData.business_reviews = business.reviews_count;
+	// 	inviteData.business_link = `favs.uz/api/client/business/${business.id}`;
+	// 	inviteData.recipient_email = dto.recipient_email;
+	// 	inviteData.email_preferences_link = `favs.uz`;
+	// 	inviteData.business_categories = business_categories;
+	// 	console.log("Najim_3");
+
+	// 	await this.mailService.sendBusinessInviteEmail(dto.recipient_email, inviteData);
+	// }
+
+	public async shareBusinessByEmail(
+		dto: ShareBusinessDto,
+		executer: ExecuterEntity,
+		lang: string,
+	) {
+		const { data: business } = await this.findOneById(dto.business_id, lang, {
+			where: { is_deleted: false },
+			relations: { photos: true, categories: true },
+		});
+		// Null yoki undefined holatini tekshirish
+		const business_categories = business.categories
+			? business.categories.map((cat) => cat.name_en).join(", ")
+			: ""; // Agar category yo'q bo'lsa, bo'sh string
+		const inviteData = new ShareBusiness();
+		inviteData.sender = executer.first_name;
+		// main_images massivini tekshirish
+		inviteData.business_image =
+			business.main_images && business.main_images.length > 0 ? business.main_images[0] : " "; // main_images bo'lmasa null qaytarish
+		console.log(inviteData.business_image);
+		// inviteData.business_image = business.main_images[0];
+		inviteData.business_name = business.name;
+		inviteData.message = dto.message;
+		inviteData.business_rating = business.average_star;
+		inviteData.business_reviews = business.reviews_count;
+		inviteData.business_link = `localhost:${config.PORT}/api/client/business/${business.id}`;
+		inviteData.recipient_email = dto.recipient_email;
+		inviteData.email_preferences_link = `favs.uz`;
+		inviteData.business_categories = business_categories;
+		inviteData.sender_link = `localhost:${config.PORT}/api/executer/${executer.id}`;
+		await this.mailService.sendBusinessInviteEmail(dto.recipient_email, inviteData);
+		return { status_code: 200, data: [], message: responseByLang("success", lang) };
+	}
+
+	public async setBusinessMainImages(
+		photo_ids: string[],
+		business_id: string,
+		executer: ExecuterEntity,
+		lang: string,
+	) {
+		const query = this.dataSource.createQueryRunner();
+		return new Promise(async (resolve, reject) => {
+			try {
+				await query.connect();
+				await query.startTransaction();
+
+				// Find the existing business and check for valid photo IDs in one query
+				const [business, existingPhotos] = await Promise.all([
+					query.manager.findOne(BusinessEntity, {
+						where: { id: business_id, is_deleted: false },
+					}),
+					query.manager.find(BusinessPhotosEntity, {
+						where: {
+							id: In(photo_ids),
+							is_deleted: false,
+							business: { id: business_id, is_deleted: false },
+						},
+					}),
+				]);
+
+				if (!business) {
+					throw new BusinessNotFound();
+				}
+
+				if (existingPhotos.length !== photo_ids.length) {
+					throw new SomePhotosNotFound();
+				}
+
+				let images_list: string[] = [];
+				existingPhotos.forEach((photo) => {
+					images_list.push(photo.image_url);
+				});
+
+				// Set main_images to the valid photo URLs
+				business.main_images = images_list;
+				business.updated_at = new Date().getTime(); // Convert Date to timestamp in milliseconds
+				business.updated_by = executer;
+
+				await query.manager.save(BusinessEntity, business);
+
+				await query.commitTransaction();
+
+				resolve({
+					status_code: 200,
+					data: [],
+					message: responseByLang("success", lang),
+				});
+			} catch (error) {
+				await query.rollbackTransaction();
+				reject(error);
+			} finally {
+				await query.release();
+			}
+		});
+	}
 }

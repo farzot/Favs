@@ -4,7 +4,7 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { CurrentLanguage } from '../../common/decorator/current-language';
 
-@Controller("notifications")
+@Controller("/notification")
 export class NotificationsController {
 	constructor(private readonly notificationsService: NotificationsService) {}
 
@@ -13,7 +13,7 @@ export class NotificationsController {
 		return this.notificationsService.create(dto, lang);
 	}
 
-	@Get()
+	@Get("/all")
 	async findAll(@CurrentLanguage() lang: string) {
 		await this.notificationsService.findAll(lang, {
 			where: { is_deleted: false },
