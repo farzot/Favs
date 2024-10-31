@@ -1,5 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { CreateBusinessDto } from "../dto/create-business.dto";
+import {
+	CreateBusinessDto,
+	CreateBusinessTelegramChatIdDto,
+	CreateTelegramChatIdDto,
+	CreateTelegramChatTopicIdDto,
+} from "../dto/create-business.dto";
 import { UpdateBusinessDto } from "../dto/update-business.dto";
 import { BaseService } from "../../../infrastructure/lib/baseService";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -18,6 +23,11 @@ import { responseByLang } from "../../../infrastructure/lib/prompts/successRespo
 import { Roles } from "../../../common/database/Enums";
 import { BcryptEncryption } from "../../../infrastructure/lib/bcrypt";
 import { FilterDto } from "../../../common/dto/filter.dto";
+import { TelegramChatIDEntity } from "../../../core/entity/tg-chat-id-business.entity";
+import { BusinessNotFound } from "../exception/not-found";
+import { AlreadyExistsError } from "../../collections/exception/already-exists.exception";
+import { TelegramTopicIDEntity } from "../../../core/entity/tg-topic-id-business.entity";
+import { ChatIDNotFound } from "../exception/chat_id-not-found.exception";
 
 @Injectable()
 export class AdminBusinessService extends BaseService<
@@ -132,5 +142,114 @@ export class AdminBusinessService extends BaseService<
 		});
 		const message = responseByLang("get_all", lang);
 		return { status_code: 200, data: businesses, message };
+	}
+
+	public async createBusinessTgChatID(
+		dto: CreateBusinessTelegramChatIdDto,
+		executer: ExecuterEntity,
+		lang: string,
+	) {
+		const query = this.dataSource.createQueryRunner();
+		await query.connect();
+		await query.startTransaction();
+		try {
+			const { data: business } = await this.findOneById(dto.business, lang);
+			if (!business) throw new BusinessNotFound();
+
+			const existingChatID = await query.manager.findOne(TelegramChatIDEntity, {
+				where: { chat_id: dto.chat_id, is_deleted: false },
+			});
+			if (existingChatID) throw new AlreadyExistsError();
+
+			const newChatID = new TelegramChatIDEntity();
+			newChatID.chat_id = dto.chat_id;
+			newChatID.business = business;
+			newChatID.created_at = new Date().getTime();
+			await query.manager.save("telegram_chat_id", newChatID);
+			await query.commitTransaction();
+			const message = responseByLang("create", lang);
+			return { status_code: 201, data: newChatID, message };
+		} catch (error) {
+			await query.rollbackTransaction();
+			throw error;
+		} finally {
+			await query.release();
+		}
+	}
+
+	public async createTgChatID(
+		dto: CreateTelegramChatIdDto,
+		executer: ExecuterEntity,
+		lang: string,
+	) {
+		const query = this.dataSource.createQueryRunner();
+		await query.connect();
+		await query.startTransaction();
+		try {
+			// const { data: business } = await this.findOneById(dto.business, lang);
+			// if (!business) throw new BusinessNotFound();
+
+			const existingChatID = await query.manager.findOne(TelegramChatIDEntity, {
+				where: { chat_id: dto.chat_id, is_deleted: false },
+			});
+			if (existingChatID) throw new AlreadyExistsError();
+
+			const newChatID = new TelegramChatIDEntity();
+			newChatID.chat_id = dto.chat_id;
+			// newChatID.business = ;
+			newChatID.created_at = new Date().getTime();
+			await query.manager.save("telegram_chat_id", { ...newChatID });
+			await query.commitTransaction();
+			const message = responseByLang("create", lang);
+			return { status_code: 201, data: newChatID, message };
+		} catch (error) {
+			await query.rollbackTransaction();
+			throw error;
+		} finally {
+			await query.release();
+		}
+	}
+
+	public async createTgTopicID(
+		dto: CreateTelegramChatTopicIdDto,
+		executer: ExecuterEntity,
+		lang: string,
+	) {
+		const query = this.dataSource.createQueryRunner();
+		await query.connect();
+		await query.startTransaction();
+		try {
+			const chat = await query.manager.findOne(TelegramChatIDEntity, {
+				where: { id: dto.chat_id, is_deleted: false },
+			});
+
+			if (!chat) {
+				throw new ChatIDNotFound();
+			}
+
+			const existingTopicID = await query.manager.findOne(TelegramTopicIDEntity, {
+				where: { topic_id: dto.topic_id, chat_id: chat, is_deleted: false },
+			});
+
+			if (existingTopicID) throw new AlreadyExistsError();
+			const newTopicID = new TelegramTopicIDEntity();
+			newTopicID.topic_id = dto.topic_id;
+			newTopicID.chat_id = chat;
+			newTopicID.type = dto.type;
+			newTopicID.created_at = new Date().getTime();
+
+			await query.manager.save("telegram_chat_topic_id", newTopicID);
+
+			await query.commitTransaction();
+
+			const message = responseByLang("create", lang);
+
+			return { status_code: 201, data: newTopicID, message };
+		} catch (error) {
+			await query.rollbackTransaction();
+			throw error;
+		} finally {
+			await query.release();
+		}
 	}
 }

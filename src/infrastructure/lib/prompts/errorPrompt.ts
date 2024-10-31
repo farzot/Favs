@@ -2863,12 +2863,68 @@ export const ERROR_PROMPT_MAP = {
 			code: "USER",
 			labels: ["Business not found!", "Бизнес не найден!", "Biznes topilmadi!"],
 		},
-		some_photos_not_found:{
+		some_photos_not_found: {
 			id: 10037,
-            status: "NOT FOUND",
-            code: "USER",
-            labels: ["Some photos not found!", "Некоторые фотографии не найдены!", "Ba'zi rasmlar topilmadi!"],
-		}
+			status: "NOT FOUND",
+			code: "USER",
+			labels: [
+				"Some photos not found!",
+				"Некоторые фотографии не найдены!",
+				"Ba'zi rasmlar topilmadi!",
+			],
+		},
+		telegram_chat_id_not_found: {
+			id: 10038,
+			status: "NOT FOUND",
+			code: "USER",
+			labels: [
+				"Telegram chat id not found!",
+				"Телеграм чат id не найден!",
+				"Telegram chat_id topilmadi!",
+			],
+		},
+		telegram_topic_id_not_found: {
+			id: 10039,
+			status: "NOT FOUND",
+			code: "USER",
+			labels: [
+				"Telegram topic id not found!",
+				"Телеграм топик id не найден!",
+				"Telegram topic_id topilmadi!",
+			],
+		},
+		reservation_not_found: {
+			id: 10040,
+			status: "NOT FOUND",
+			code: "USER",
+			labels: [
+				"Reservation not found!",
+				"Бронирование не найдено!",
+				"Bron qilish topilmadi!",
+			],
+		},
+		cancellation_not_allowed: {
+			id: 10041,
+			status: "BADREQUEST",
+			code: "USER",
+			labels: ["Cancellation not allowed!", "Отмена запрещена!", "Bekor qilib bo'lmaydi!"],
+		},
+		ruhsat_etilmagan_harakat: {
+			id: 10042,
+			status: "BADREQUEST",
+			code: "USER",
+			labels: [
+				"This action cannot be performed!", // Ingliz tili
+				"Это действие не может быть выполнено!", // Rus tili (Grammatik jihatdan to'g'ri)
+				"Bu amalni bajarishning imkoni yo'q!", // O'zbek tili (Sohasi va holatiga mosroq)
+			],
+		},
+		chat_id_not_found: {
+			id: 10043,
+			status: "NOT FOUND",
+			code: "USER",
+			labels: ["Chat id not found!", "Чат id не найден!", "Chat_id topilmadi!"],
+		},
 	},
 };
 

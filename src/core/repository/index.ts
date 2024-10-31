@@ -22,3 +22,6 @@ export { ExecuterRepository } from "./executer.repository";
 export { SMSTokenRepository } from "./sms-token.repository";
 export { BusinessRepository } from "./business.repository";
 export { BlockRepository } from "./block-user.repository";
+export { ReservationRepository } from "./reservation.repository";
+export { TelegramTopicIDRepository } from "./tg-topic-id-business.repository";
+export { TelegramChatIDRepository } from "./tg-chat_id-business.repository";

@@ -1,9 +1,9 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { OrderEntity } from "./order.entity";
-import { BaseEntity } from "../../common/database/BaseEntity";
 import { ExecuterEntity } from "./executer.entity";
+import { BaseEntity } from "src/common/database/BaseEntity";
 
-@Entity("user_location")
+@Entity("user_locations")
 export class UserLocationEntity extends BaseEntity {
 	@Column({ type: "varchar", length: 20, nullable: true })
 	public name_of_address!: string;

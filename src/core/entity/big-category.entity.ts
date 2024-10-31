@@ -24,6 +24,9 @@ export class BigCategoryEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public description_ru!: string;
 
+	@OneToMany(() => SmallCategoryEntity, (small_category) => small_category.big_category)
+	public small_categories!: SmallCategoryEntity[];
+
 	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
 		onDelete: "CASCADE",
 	})
@@ -41,7 +44,4 @@ export class BigCategoryEntity extends BaseEntity {
 	})
 	@JoinColumn({ name: "deleted_by" })
 	deleted_by!: ExecuterEntity;
-
-	@OneToMany(() => SmallCategoryEntity, (small_category) => small_category.big_category)
-	public small_categories!: SmallCategoryEntity[];
 }

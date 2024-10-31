@@ -1,6 +1,13 @@
-enum CategorySize {
-	BIG = "big",
-	SMALL = "small",
+export enum ReservationStatus {
+	PENDING = "pending",
+	NO_SHOW = "no_show", // Kelmagan
+	CANCELLED = "cancelled", // Bekor qilingan
+	CONFIRMED = "confirmed", // Tasdiqlangan
+	CHECKED_IN = "checked-in", // Tizimga kirdi yoki joy egallandi
+	COMPLETED = "completed", // Tugallangan
+	EXPIRED = "expired", // Muddati tugagan
+	WAITLIST = "waiting list", // Navbat ro'yxatida
+	FAILED = "failed", // Muvaffaqiyatsiz
 }
 
 export enum Roles {
@@ -38,18 +45,28 @@ export enum ProductType {
 	IN_STOCK = "in_stock",
 }
 
-export enum PhotoType{
+export enum PhotoType {
 	INSIDE = "inside",
 	OUTSIDE = "outside",
-	ALL= "all",
-	PRODUCTS= "products",
+	ALL = "all",
+	PRODUCTS = "products",
 	BANNER = "banner",
 	LOGO = "logo",
-    MAIN = "main",
+	MAIN = "main",
 }
 
 export enum BusinessRequest {
 	WAITING_FOR_APPROVAL = "pending",
 	ACCEPTED = "accepted",
 	REJECTED = "rejected",
+}
+
+export enum TopicType {
+	ORDER = "order",
+	CONTACT_US = "consultation",
+	NEWS = "news",
+	FEEDBACK = "feedback",
+	CHAT = "chat",
+	RESERVATION = "reservation",
+	FOLLOWERS = "followers",
 }

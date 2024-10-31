@@ -9,6 +9,7 @@ import { ExecuterEntity } from "./executer.entity";
 import { ConsultationRequestEntity } from "./consultation.entity";
 import { BusinessScheduleEntity } from "./business_schedule.entity";
 import { FaqBusinessEntity } from "./faq-business.entity";
+import { TelegramChatIDEntity } from "./tg-chat-id-business.entity";
 @Entity("business")
 export class BusinessEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
@@ -63,13 +64,19 @@ export class BusinessEntity extends BaseEntity {
 	public is_reservation_available!: boolean;
 
 	@Column({ type: "boolean", nullable: true, default: false })
+	public is_reservation_blocked!: boolean;
+
+	@Column({ type: "decimal", nullable: true, default: 0 })
+	public reservation_deposit_amount!: number;
+
+	@Column({ type: "boolean", nullable: true, default: false })
 	public is_wifi_available!: boolean;
 
 	@Column({ type: "boolean", nullable: true, default: false })
 	public is_recommended!: boolean;
 
 	@Column({ type: "decimal", nullable: true, default: 0 })
-	public balance!: number;
+	public business_balance!: number;
 
 	@Column({ type: "decimal", nullable: true, default: 0 })
 	public average_star!: number;
@@ -82,24 +89,6 @@ export class BusinessEntity extends BaseEntity {
 
 	@Column({ type: "simple-array", nullable: true })
 	public company_documents!: string[];
-
-	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
-		onDelete: "CASCADE",
-	})
-	@JoinColumn({ name: "created_by" })
-	created_by!: ExecuterEntity;
-
-	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
-		onDelete: "CASCADE",
-	})
-	@JoinColumn({ name: "updated_by" })
-	updated_by!: ExecuterEntity;
-
-	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
-		onDelete: "CASCADE",
-	})
-	@JoinColumn({ name: "deleted_by" })
-	deleted_by!: ExecuterEntity;
 
 	@ManyToOne(() => ExecuterEntity, (owner) => owner.business, { onDelete: "CASCADE" })
 	@JoinColumn({ name: "owner_id" })
@@ -132,5 +121,26 @@ export class BusinessEntity extends BaseEntity {
 	public schedules!: BusinessScheduleEntity[];
 
 	@OneToMany(() => FaqBusinessEntity, (faq) => faq.business)
-	business_faqs!: FaqBusinessEntity[];
+	public business_faqs!: FaqBusinessEntity[];
+
+	@OneToMany(() => TelegramChatIDEntity, (chat_id) => chat_id.business)
+	public chat_ids!: TelegramChatIDEntity[];
+
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "created_by" })
+	created_by!: ExecuterEntity;
+
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "updated_by" })
+	updated_by!: ExecuterEntity;
+
+	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
+		onDelete: "CASCADE",
+	})
+	@JoinColumn({ name: "deleted_by" })
+	deleted_by!: ExecuterEntity;
 }

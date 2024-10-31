@@ -43,6 +43,7 @@ import { CombinedBusinessQueryDto } from "../dto/combined-business-query.dto";
 import { ShareBusinessDto } from "../dto/share-business.dto";
 import { UpdateBusinessMainImagesDto } from "../dto/update-main-photos.dto";
 import { UpdateBusinessPhotoTypesDto } from "../dto/update-business-photo-types.dto";
+import { UpdateBusinessByBusAdmins } from "../dto/update-business.dto";
 
 @Controller("/client/business")
 export class ClientBusinessController {
@@ -58,32 +59,6 @@ export class ClientBusinessController {
 	) {
 		return this.businessService.addBusinessRequest(dto, lang, executerPayload.executer);
 	}
-
-	// gett all business with filter
-	// @Get("/all")
-	// public async findAll(
-	// 	@CurrentLanguage() lang: string,
-	// 	@Query() query: BusinessQueryDto,
-	// ): Promise<IResponse<BusinessEntity[]>> {
-	// 	let where_condition: FindOptionsWhereProperty<BusinessEntity> = {};
-	// 	if (query?.search) {
-	// 		where_condition = [
-	// 			{
-	// 				name: ILike(`%${query.search}%`),
-	// 				is_deleted: false,
-	// 			},
-	// 		];
-	// 	}
-	// 	let { data: businesses } = await this.businessService.findAllWithPagination(lang, {
-	// 		take: query.page_size,
-	// 		skip: query.page,
-	// 		where: where_condition,
-	// 		order: { created_at: "DESC" },
-	// 	});
-	// 	// categories = this.businessService.filterCategoryByLang(categories, lang);
-	// 	const message = responseByLang("get_all", lang);
-	// 	return { status_code: 200, data: businesses, message };
-	// }
 
 	// get all business with multiple filters
 	@Get("/all-with-filters")
@@ -406,17 +381,32 @@ export class ClientBusinessController {
 
 	// get all consultations by business id in admin dashboard
 	@UseGuards(JwtAuthGuard, RolesGuard)
-	@RolesDecorator(Roles.BUSINESS_MANAGER, Roles.BUSINESS_MANAGER)
-	@Get("/all-consultations")
+	@RolesDecorator(Roles.BUSINESS_OWNER, Roles.BUSINESS_MANAGER)
+	@Get("/self/all-consultations")
 	public async getAllConsultations(
 		@CurrentLanguage() lang: string,
 		@CurrentExecuter() executerPayload: ICurrentExecuter,
 	) {
-		const business_id = executerPayload.business_id;
+		const business_id = executerPayload.executer.business[0]?.id;
 		if (!business_id) {
 			throw new BusinessNotFound();
 		}
 		return this.businessService.getAllConsultations(lang, business_id);
+	}
+
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@RolesDecorator(Roles.BUSINESS_OWNER, Roles.BUSINESS_MANAGER)
+	@Get("/self/business-info")
+	public async getSelfBusinessInfo(
+		@CurrentLanguage() lang: string,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
+	) {
+		const business_id = executerPayload.executer.business[0]?.id;
+		if (!business_id) {
+			throw new BusinessNotFound();
+		}
+		console.log("business_id", business_id)
+		return await this.businessService.getSelfBusinessInfo(lang, business_id);
 	}
 
 	// add business photo to business
@@ -519,6 +509,26 @@ export class ClientBusinessController {
 		return this.businessService.setBusinessMainImages(
 			dto.photo_ids,
 			business_id,
+			executerPayload.executer,
+			lang,
+		);
+	}
+
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@RolesDecorator(Roles.BUSINESS_MANAGER, Roles.BUSINESS_OWNER)
+	@Patch("/update/business-availabilities")
+	public async updateBusinessAvailabilities(
+		@Body() dto: UpdateBusinessByBusAdmins,
+		@CurrentExecuter() executerPayload: ICurrentExecuter,
+		@CurrentLanguage() lang: string,
+	) {
+		const business_id = executerPayload.executer.business[0]?.id;
+		if (!business_id) {
+			throw new BusinessNotFound();
+		}
+		return this.businessService.updateBusinessAvailabilities(
+			business_id,
+			dto,
 			executerPayload.executer,
 			lang,
 		);

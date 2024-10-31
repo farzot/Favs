@@ -31,8 +31,11 @@ import { NotificationsModule } from "./notifications/notifications.module";
 import { BusinessReviewsModule } from "./business_reviews/business_reviews.module";
 import { ProductReviewsModule } from "./product_reviews/product_reviews.module";
 import { ChatGateway } from "../chat/chat.gateway";
-import { ChatModule } from "./chat/chat.module";
+// import { ChatModule } from "./chat/chat.module";
 import { BlockModule } from "./block/block.module";
+import { PaymentModule } from './payment/payment.module';
+import { ReservationsService } from "./reservations/reservations.service";
+import { NotificationsService } from "./notifications/notifications.service";
 @Module({
 	providers: [ChatGateway],
 	imports: [
@@ -69,9 +72,10 @@ import { BlockModule } from "./block/block.module";
 		NotificationsModule,
 		BusinessReviewsModule,
 		ProductReviewsModule,
-		ChatModule,
+		// ChatModule,
 		FriendshipModule,
 		BlockModule,
+		PaymentModule,
 	],
 })
 export class AppModule implements NestModule {

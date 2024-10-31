@@ -10,15 +10,17 @@ import { ClientBusinessService } from "./service/client-business.service";
 import { BigCategoryModule } from "../big_category/big_category.module";
 import { ConsultationRequestEntity } from "../../core/entity/consultation.entity";
 import { MailService } from "../mail/mail.service";
+import { ReservationsModule } from "../reservations/reservations.module";
 
 @Module({
 	imports: [
 		TypeOrmModule.forFeature([BusinessEntity, ConsultationRequestEntity]),
 		forwardRef(() => SmallCategoryModule),
 		forwardRef(() => BigCategoryModule),
+		ReservationsModule
 	],
 	controllers: [AdminBusinessController, ClientBusinessController],
-	providers: [AdminBusinessService, ClientBusinessService,MailService],
+	providers: [AdminBusinessService, ClientBusinessService, MailService],
 	exports: [AdminBusinessService, ClientBusinessService],
 })
 export class BusinessModule {}

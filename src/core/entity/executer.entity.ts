@@ -47,7 +47,7 @@ export class ExecuterEntity extends BaseEntity {
 	@Column({ type: "varchar", nullable: true })
 	public home_town!: string;
 
-	@Column({ type: "varchar", nullable: true })
+	@Column({ type: "bigint", nullable: true })
 	public birth_date!: number;
 
 	@Column({ type: "varchar", nullable: true })
@@ -88,24 +88,6 @@ export class ExecuterEntity extends BaseEntity {
 
 	@Column({ type: "int", nullable: true, default: 0 })
 	public otp_blocked_duration!: number;
-
-	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
-		onDelete: "CASCADE",
-	})
-	@JoinColumn({ name: "created_by" })
-	created_by!: ExecuterEntity;
-
-	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
-		onDelete: "CASCADE",
-	})
-	@JoinColumn({ name: "updated_by" })
-	updated_by!: ExecuterEntity;
-
-	@ManyToOne(() => ExecuterEntity, (executer) => executer.id, {
-		onDelete: "CASCADE",
-	})
-	@JoinColumn({ name: "deleted_by" })
-	deleted_by!: ExecuterEntity;
 
 	// @Column({ type: "simple-array", nullable: true })
 	// public images!: string[];

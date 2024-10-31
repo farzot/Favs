@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import { CreateBusinessDto } from "../dto/create-business.dto";
-import { UpdateBusinessDto } from "../dto/update-business.dto";
+import { UpdateBusinessByBusAdmins, UpdateBusinessDto } from "../dto/update-business.dto";
 import { BaseService } from "../../../infrastructure/lib/baseService";
 import { InjectRepository } from "@nestjs/typeorm";
 import { BusinessEntity } from "../../../core/entity/business.entity";
@@ -33,6 +33,7 @@ import { ShareBusiness, ShareBusinessDto } from "../dto/share-business.dto";
 import { BusinessNotFound } from "../exception/not-found";
 import { SomePhotosNotFound } from "../exception/photos-not-found.exception";
 import { UpdateBusinessPhotoTypesDto } from "../dto/update-business-photo-types.dto";
+import { Forbidden } from "../../auth/exception";
 
 @Injectable()
 export class ClientBusinessService extends BaseService<
@@ -235,6 +236,7 @@ export class ClientBusinessService extends BaseService<
 		};
 	}
 
+	// Create consultation by client
 	public async createConsultation(
 		dto: CreateConsultationDto,
 		lang: string,
@@ -268,6 +270,7 @@ export class ClientBusinessService extends BaseService<
 		}
 	}
 
+	// Business Admin panelida businessga tegishli barcha consultatsiyalarni olish
 	public async getAllConsultations(lang: string, business_id: string) {
 		const consultations = await this.consultationRepo.findBy({
 			business: { id: business_id }, // bitta biznes bo'lsa, array ishlatmasdan to'g'ridan-to'g'ri shu qiymatni qo'yamiz
@@ -277,6 +280,15 @@ export class ClientBusinessService extends BaseService<
 		return { status_code: 200, data: consultations, message };
 	}
 
+	public async getSelfBusinessInfo(lang: string, business_id: string) {
+		const founded_business = await this.findOneById(business_id, lang, {
+			where: { is_deleted: false },
+		});
+		const message = responseByLang("success", lang);
+		return { status_code: 200, data: founded_business, message };
+	}
+
+	// Business ga photo qo'shish client tomonidan
 	public addBusinessPhoto(
 		dto: AddBusinessPhotoDto,
 		files: any,
@@ -341,6 +353,7 @@ export class ClientBusinessService extends BaseService<
 		});
 	}
 
+	// Business Admin panelida photo type ni update qilish
 	public async updateBusinessPhotoType(
 		dto: UpdateBusinessPhotoTypeDto,
 		business_id: string,
@@ -385,6 +398,7 @@ export class ClientBusinessService extends BaseService<
 		});
 	}
 
+	// Business admin panelida bir nechta photolarni type ni update qilish
 	public async updateBusinessPhotoTypes(
 		dto: UpdateBusinessPhotoTypesDto,
 		business_id: string,
@@ -440,6 +454,7 @@ export class ClientBusinessService extends BaseService<
 		});
 	}
 
+	// business ga tegishli photo larni type orqali get qilish
 	public async getAllBusinessPhotosByType(
 		business_id: string,
 		photo_type: PhotoType | null, // PhotoType null bo'lishi mumkinligini ko'rsatish
@@ -496,34 +511,7 @@ export class ClientBusinessService extends BaseService<
 		});
 	}
 
-	// public async shareBusinessByEmail(
-	// 	dto: ShareBusinessDto,
-	// 	executer: ExecuterEntity,
-	// 	lang: string,
-	// ) {
-	// 	const { data: business } = await this.findOneById(dto.business_id, lang, {
-	// 		where: { is_deleted: false },
-	// 		relations: { photos: true },
-	// 	});
-	// 	console.log("Najim_1")
-	// 	const business_categories = business.categories.map((cat) => cat.name_en).join(", ");
-	// 	console.log("Najim_2");
-	// 	const inviteData = new ShareBusiness();
-	// 	inviteData.sender = executer.first_name;
-	// 	inviteData.business_image = business.main_images[0];
-	// 	inviteData.business_name = business.name;
-	// 	inviteData.message = dto.message;
-	// 	inviteData.business_rating = business.average_star;
-	// 	inviteData.business_reviews = business.reviews_count;
-	// 	inviteData.business_link = `favs.uz/api/client/business/${business.id}`;
-	// 	inviteData.recipient_email = dto.recipient_email;
-	// 	inviteData.email_preferences_link = `favs.uz`;
-	// 	inviteData.business_categories = business_categories;
-	// 	console.log("Najim_3");
-
-	// 	await this.mailService.sendBusinessInviteEmail(dto.recipient_email, inviteData);
-	// }
-
+	// client business ni email orqali share qilish zaprozi
 	public async shareBusinessByEmail(
 		dto: ShareBusinessDto,
 		executer: ExecuterEntity,
@@ -557,6 +545,7 @@ export class ClientBusinessService extends BaseService<
 		return { status_code: 200, data: [], message: responseByLang("success", lang) };
 	}
 
+	// Business admin panelida picturelarni main qilish
 	public async setBusinessMainImages(
 		photo_ids: string[],
 		business_id: string,
@@ -608,7 +597,75 @@ export class ClientBusinessService extends BaseService<
 				resolve({
 					status_code: 200,
 					data: [],
-					message: responseByLang("success", lang),
+					message: responseByLang("update", lang),
+				});
+			} catch (error) {
+				await query.rollbackTransaction();
+				reject(error);
+			} finally {
+				await query.release();
+			}
+		});
+	}
+
+	// business Adminlari tomonidan businessga tegishli ma'lum o'zgaruvchilarni update qilish
+	public async updateBusinessAvailabilities(
+		business_id: string,
+		dto: UpdateBusinessByBusAdmins,
+		executer: ExecuterEntity,
+		lang: string,
+	) {
+		const query = this.dataSource.createQueryRunner();
+
+		return new Promise(async (resolve, reject) => {
+			try {
+				await query.connect();
+				await query.startTransaction();
+
+				// Biznesni topish
+				const business = await query.manager.findOne(BusinessEntity, {
+					where: { id: business_id, is_deleted: false },
+				});
+
+				if (!business) {
+					throw new BusinessNotFound();
+				}
+
+				// Faqat BUSINESS_OWNER va BUSINESS_MANAGER rollariga ega bo'lganlar ruxsat oladi
+				if (![Roles.BUSINESS_OWNER, Roles.BUSINESS_MANAGER].includes(executer.role)) {
+					throw new Forbidden();
+				}
+
+				// Yangilanishlar qo'llanilmoqda
+				if (dto.is_delivery_available !== undefined) {
+					business.is_delivery_available = dto.is_delivery_available;
+				}
+				if (dto.is_checkout_available !== undefined) {
+					business.is_checkout_available = dto.is_checkout_available;
+				}
+				if (dto.is_reservation_available !== undefined) {
+					business.is_reservation_available = dto.is_reservation_available;
+				}
+				if (dto.is_reservation_blocked !== undefined) {
+					business.is_reservation_blocked = dto.is_reservation_blocked;
+				}
+				if (dto.reservation_deposit_amount !== undefined) {
+					business.reservation_deposit_amount = dto.reservation_deposit_amount;
+				}
+
+				// Yangilash vaqti va kim tomonidan yangilanganini belgilash
+				business.updated_at = new Date().getTime();
+				business.updated_by = executer;
+
+				// BusinessEntity ni saqlash
+				await query.manager.save(BusinessEntity, business);
+
+				await query.commitTransaction();
+
+				resolve({
+					status_code: 200,
+					data: [],
+					message: responseByLang("update", lang),
 				});
 			} catch (error) {
 				await query.rollbackTransaction();

@@ -1,5 +1,20 @@
-import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsNotEmpty, IsNumberString, IsOptional, IsString, IsUUID } from "class-validator";
+import {
+	ArrayNotEmpty,
+	IsArray,
+	IsBoolean,
+	IsEmail,
+	IsEnum,
+	IsNotEmpty,
+	IsNumberString,
+	IsOptional,
+	IsString,
+	IsUUID,
+	ValidateNested,
+} from "class-validator";
 import { CreateExecuterDto } from "./create-business-executer.dto";
+import { Type } from "class-transformer";
+import { ObjDto } from "../../../common/type";
+import { TopicType } from "../../../common/database/Enums";
 
 export class CreateBusinessDto extends CreateExecuterDto {
 	@IsNotEmpty()
@@ -12,7 +27,7 @@ export class CreateBusinessDto extends CreateExecuterDto {
 
 	@IsNotEmpty()
 	@IsString()
-	public phone_number!: string;	
+	public phone_number!: string;
 
 	@IsNotEmpty()
 	@IsString()
@@ -61,4 +76,43 @@ export class CreateBusinessDto extends CreateExecuterDto {
 	@IsNotEmpty()
 	@IsBoolean()
 	public is_claimed!: boolean;
+}
+
+export class CreateBusinessTelegramChatIdDto {
+	@IsNotEmpty()
+	@IsString()
+	public chat_id!: string;
+
+	@IsNotEmpty()
+	@IsUUID()
+	// @ValidateNested({ each: true })
+	// @Type(() => ObjDto)
+	public business!: string;
+}
+
+export class CreateTelegramChatIdDto {
+	@IsNotEmpty()
+	@IsString()
+	public chat_id!: string;
+
+	@IsOptional()
+	@IsNotEmpty()
+	@IsUUID()
+	public business!: string;
+}
+
+
+export class CreateTelegramChatTopicIdDto {
+	@IsNotEmpty()
+	@IsString()
+	public topic_id!: string;
+
+	@IsOptional()
+	@IsNotEmpty()
+	@IsUUID()
+	public chat_id!: string;
+
+	@IsNotEmpty()
+	@IsEnum(TopicType)
+	public type!: TopicType;
 }
